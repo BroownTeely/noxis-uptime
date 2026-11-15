@@ -1,0 +1,12 @@
+<% const g = group || {}; %>
+<form class="form form-page" id="groupForm" data-group-id="<%= g.id || '' %>" novalidate>
+  <label class="field"><span class="field__label">Nome</span>
+    <input name="name" required maxlength="80" value="<%= g.name || '' %>"></label>
+  <label class="field"><span class="field__label">Descrição (opcional)</span>
+    <input name="description" maxlength="200" value="<%= g.description || '' %>"></label>
+  <div class="form-actions">
+    <a class="btn btn--ghost" href="/groups" data-cancel-link>Cancelar</a>
+    <button class="btn btn--primary" type="submit"><%= g.id ? 'Salvar' : 'Criar grupo' %></button>
+  </div>
+  <div class="alert alert--error" id="groupFormError" hidden role="alert"></div>
+</form>

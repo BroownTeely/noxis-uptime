@@ -1,0 +1,177 @@
+<% const m = monitor || {}; const cfg = m.config || {}; const isEdit = !!monitor; const headers = cfg.headers ? Object.entries(cfg.headers).map(([k,v]) => `${k}: ${v}`).join('\n') : ''; %>
+<form class="form-page" id="monitorForm" data-monitor-id="<%= isEdit ? m.id : '' %>" novalidate>
+  <div class="form-layout">
+    <div class="form-main">
+      <section class="card">
+        <header class="card__head"><h2>Identificação</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">Nome</span>
+            <input name="name" required maxlength="120" value="<%= m.name || '' %>"></label>
+          <label class="field"><span class="field__label">Tipo</span>
+            <select name="type" id="typeSelect" <%= isEdit ? 'disabled' : '' %>>
+              <% types.forEach(t => { %><option value="<%= t.value %>" <%= (m.type || 'http') === t.value ? 'selected' : '' %>><%= t.label %></option><% }) %>
+            </select>
+            <% if (isEdit) { %><input type="hidden" name="type" value="<%= m.type %>"><% } %>
+            <span class="field__hint" id="typeHint"></span></label>
+          <label class="field"><span class="field__label">Grupo</span>
+            <select name="groupId"><option value="">Sem grupo</option>
+              <% groups.forEach(g => { %><option value="<%= g.id %>" <%= m.groupId === g.id ? 'selected' : '' %>><%= g.name %></option><% }) %>
+            </select></label>
+          <label class="field field--span-2"><span class="field__label">Tags (separadas por vírgula)</span>
+            <input name="tags" maxlength="300" value="<%= (m.tags || []).join(', ') %>"></label>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="http keyword json api">
+        <header class="card__head"><h2>Requisição HTTP</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">URL</span>
+            <input name="target" data-for-type="http keyword json api" placeholder="https://servico.local:8080/health" maxlength="2048" value="<%= m.type && ['http','keyword','json','api'].includes(m.type) ? m.target : '' %>"></label>
+          <label class="field"><span class="field__label">Método</span>
+            <select name="method"><% ['GET','HEAD','POST','PUT','PATCH','DELETE'].forEach(x => { %><option <%= (cfg.method || 'GET') === x ? 'selected' : '' %>><%= x %></option><% }) %></select></label>
+          <label class="field"><span class="field__label">Status esperado</span>
+            <input name="expectedStatus" value="<%= cfg.expectedStatus || '200-299' %>" placeholder="200-299 ou 200,301"></label>
+          <label class="field field--span-2"><span class="field__label">Corpo da requisição</span>
+            <textarea name="requestBody" rows="3" maxlength="10000"><%= cfg.body || '' %></textarea></label>
+          <label class="field field--span-2"><span class="field__label">Cabeçalhos (um por linha: Nome: valor)</span>
+            <textarea name="headers" rows="3" placeholder="X-Api-Version: 2"><%= headers.includes('••') ? '' : headers %></textarea>
+            <span class="field__hint">Cabeçalhos sensíveis já salvos permanecem ocultos; reenvie apenas se for alterar.</span></label>
+          <label class="field"><span class="field__label">Autenticação</span>
+            <select name="authType">
+              <option value="">Nenhuma</option>
+              <option value="basic" <%= cfg.auth?.type === 'basic' ? 'selected' : '' %>>Básica</option>
+              <option value="bearer" <%= cfg.auth?.type === 'bearer' ? 'selected' : '' %>>Token Bearer</option>
+              <option value="apikey" <%= cfg.auth?.type === 'apikey' ? 'selected' : '' %>>API key (cabeçalho)</option>
+            </select></label>
+          <label class="field"><span class="field__label">Usuário</span>
+            <input name="authUsername" value="<%= cfg.auth?.username || '' %>" autocomplete="off"></label>
+          <label class="field"><span class="field__label">Senha</span>
+            <input name="authPassword" type="password" placeholder="<%= cfg.auth?.password ? 'Mantida' : '' %>" autocomplete="new-password"></label>
+          <label class="field"><span class="field__label">Token</span>
+            <input name="authToken" type="password" placeholder="<%= cfg.auth?.token ? 'Mantido' : '' %>" autocomplete="new-password"></label>
+          <label class="field"><span class="field__label">Nome do cabeçalho da API key</span>
+            <input name="authApiKeyName" maxlength="80" value="<%= cfg.auth?.name || 'X-Api-Key' %>"></label>
+          <label class="field"><span class="field__label">Valor da API key</span>
+            <input name="authApiKeyValue" type="password" autocomplete="new-password" placeholder="<%= cfg.auth?.value ? 'Mantido' : '' %>"></label>
+          <label class="check field--span-2"><input type="checkbox" name="followRedirects" <%= cfg.followRedirects !== false ? 'checked' : '' %>><span>Seguir redirecionamentos (validados contra a política de rede)</span></label>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="keyword http">
+        <header class="card__head"><h2>Verificação de conteúdo</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">Palavra-chave</span>
+            <input name="keyword" maxlength="300" value="<%= cfg.keyword?.value || '' %>"></label>
+          <label class="check"><input type="checkbox" name="keywordCaseSensitive" <%= cfg.keyword?.caseSensitive ? 'checked' : '' %>><span>Diferenciar maiúsculas</span></label>
+          <label class="check"><input type="checkbox" name="keywordMustExist" <%= cfg.keyword?.mustExist !== false ? 'checked' : '' %>><span>Deve estar presente (desmarque para ausência)</span></label>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="json api">
+        <header class="card__head"><h2>Validação JSON</h2></header>
+        <div class="form-grid">
+          <label class="field"><span class="field__label">Caminho</span>
+            <input name="jsonPath" placeholder="data.status" maxlength="200" value="<%= cfg.jsonPath || '' %>"></label>
+          <label class="field"><span class="field__label">Operador</span>
+            <select name="jsonOperator">
+              <option value="equals" <%= (cfg.jsonOperator || 'equals') === 'equals' ? 'selected' : '' %>>Igual a</option>
+              <option value="notEquals" <%= cfg.jsonOperator === 'notEquals' ? 'selected' : '' %>>Diferente de</option>
+              <option value="exists" <%= cfg.jsonOperator === 'exists' ? 'selected' : '' %>>Existe</option>
+            </select></label>
+          <label class="field field--span-2"><span class="field__label">Valor esperado</span>
+            <input name="jsonExpected" maxlength="500" value="<%= cfg.jsonExpected || '' %>"></label>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="api">
+        <header class="card__head"><h2>Validação da resposta</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">Chaves obrigatórias no JSON (separadas por vírgula)</span>
+            <input name="requiredKeys" maxlength="300" placeholder="status, data.id" value="<%= cfg.requiredKeys || '' %>"></label>
+          <p class="field__hint field--span-2">O corpo da requisição precisa ser JSON válido. Segredos (senha, token, API key) são ocultados e mantidos ao editar.</p>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="tcp">
+        <header class="card__head"><h2>Porta TCP</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">Host ou IP</span>
+            <input name="target" data-for-type="tcp" maxlength="255" value="<%= m.type === 'tcp' ? m.target.split(':').slice(0,-1).join(':') || m.target : '' %>" placeholder="192.168.0.10"></label>
+          <label class="field"><span class="field__label">Porta</span>
+            <input name="port" type="number" min="1" max="65535" value="<%= m.type === 'tcp' ? m.target.split(':').pop() : '' %>"></label>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="ping">
+        <header class="card__head"><h2>PING / ICMP</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">Host ou IP</span>
+            <input name="target" data-for-type="ping" maxlength="253" value="<%= m.type === 'ping' ? m.target : '' %>" placeholder="10.0.0.1"></label>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="dns">
+        <header class="card__head"><h2>DNS</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">Domínio</span>
+            <input name="target" data-for-type="dns" maxlength="253" value="<%= m.type === 'dns' ? m.target : '' %>" placeholder="exemplo.com"></label>
+          <label class="field"><span class="field__label">Tipo de registro</span>
+            <select name="recordType"><% ['A','AAAA','CNAME','MX','TXT','NS','SRV','CAA'].forEach(x => { %><option <%= (cfg.recordType || 'A') === x ? 'selected' : '' %>><%= x %></option><% }) %></select></label>
+          <label class="field"><span class="field__label">Servidor DNS (opcional)</span>
+            <input name="dnsServer" placeholder="1.1.1.1" value="<%= cfg.server || '' %>"></label>
+          <label class="field field--span-2"><span class="field__label">Valor esperado (opcional)</span>
+            <input name="expected" maxlength="300" value="<%= cfg.expected || '' %>"></label>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="ssl">
+        <header class="card__head"><h2>Certificado SSL / TLS</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">Host (host:porta)</span>
+            <input name="target" data-for-type="ssl" maxlength="255" value="<%= m.type === 'ssl' ? m.target : '' %>" placeholder="exemplo.com:443"></label>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="docker">
+        <header class="card__head"><h2>Container Docker</h2></header>
+        <div class="form-grid">
+          <label class="field field--span-2"><span class="field__label">Nome ou ID do container</span>
+            <input name="target" data-for-type="docker" maxlength="128" value="<%= m.type === 'docker' ? m.target : '' %>"></label>
+          <p class="field__hint field--span-2">Requer DOCKER_SOCKET configurado no servidor. Acesso somente leitura.</p>
+        </div>
+      </section>
+
+      <section class="card" data-for-type="push">
+        <header class="card__head"><h2>Heartbeat / Push</h2></header>
+        <p class="muted">O token é gerado ao salvar. Envie GET ou POST para a URL exibida na página de detalhes do monitor.</p>
+      </section>
+    </div>
+
+    <aside class="form-side">
+      <section class="card">
+        <header class="card__head"><h2>Verificação</h2></header>
+        <div class="form-grid form-grid--single">
+          <label class="field"><span class="field__label">Intervalo (s)</span>
+            <input name="intervalSeconds" type="number" min="10" max="86400" value="<%= m.intervalSeconds || 60 %>"></label>
+          <label class="field"><span class="field__label">Timeout (s)</span>
+            <input name="timeoutSeconds" type="number" min="1" max="60" value="<%= m.timeoutSeconds || 10 %>"></label>
+          <label class="field"><span class="field__label">Tentativas antes de falhar</span>
+            <input name="retries" type="number" min="0" max="10" value="<%= m.retries ?? 2 %>"></label>
+          <label class="field"><span class="field__label">Limite de latência (ms, opcional)</span>
+            <input name="latencyThresholdMs" type="number" min="1" max="60000" value="<%= m.latencyThresholdMs || '' %>"></label>
+          <label class="check"><input type="checkbox" name="active" <%= !isEdit || m.active ? 'checked' : '' %>><span>Monitor ativo</span></label>
+        </div>
+      </section>
+      <section class="card">
+        <header class="card__head"><h2>Teste</h2></header>
+        <button class="btn btn--block" type="button" id="testBtn">Executar verificação de teste</button>
+        <div class="test-result" id="testResult" hidden></div>
+      </section>
+      <div class="form-actions">
+        <a class="btn btn--ghost" href="<%= isEdit ? '/monitors/' + m.id : '/monitors' %>" data-cancel-link>Cancelar</a>
+        <button class="btn btn--primary" type="submit" id="saveBtn"><%= isEdit ? 'Salvar alterações' : 'Criar monitor' %></button>
+      </div>
+      <div class="alert alert--error" id="formErrors" hidden role="alert"></div>
+    </aside>
+  </div>
+</form>

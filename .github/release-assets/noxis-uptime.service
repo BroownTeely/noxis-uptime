@@ -1,0 +1,30 @@
+[Unit]
+Description=Noxis Uptime - monitoramento self-hosted
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=noxis
+Group=noxis
+WorkingDirectory=/opt/noxis-uptime
+EnvironmentFile=/opt/noxis-uptime/.env
+Environment=HOME=/opt/noxis-uptime/storage/home
+Environment=npm_config_cache=/opt/noxis-uptime/storage/npm-cache
+ExecStart=/usr/bin/env node app.js
+# "always": após uma atualização o processo encerra e o systemd o inicia na nova versão
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# Precisa escrever no próprio diretório para aplicar atualizações
+ReadWritePaths=/opt/noxis-uptime
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="<%= page.theme %>" style="--accent: <%= page.accentColor %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="<%= page.isPublic ? 'index' : 'noindex' %>">
+  <title><%= page.title %> · Status</title>
+  <% if (page.faviconUrl) { %><link rel="icon" href="<%= page.faviconUrl %>"><% } else { %><link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml"><% } %>
+  <link rel="stylesheet" href="/static/css/status.css">
+</head>
+<body>
+<main class="sp">
+  <header class="sp-head">
+    <% if (page.logoUrl) { %><img class="sp-logo" src="<%= page.logoUrl %>" alt=""><% } %>
+    <div>
+      <h1><%= page.title %></h1>
+      <% if (page.description) { %><p class="sp-desc"><%= page.description %></p><% } %>
+    </div>
+  </header>
+
+  <section class="sp-overall sp-overall--<%= view.overall.level %>" role="status">
+    <span class="sp-dot"></span><strong><%= view.overall.text %></strong>
+  </section>
+
+  <% if (view.openIncidents.length) { %>
+  <section class="sp-card">
+    <h2>Incidentes ativos</h2>
+    <% view.openIncidents.forEach(i => { %>
+      <article class="sp-incident">
+        <div class="sp-incident__head"><strong><%= i.title %></strong><span class="sp-tag"><%= i.status %></span></div>
+        <div class="sp-muted">Início: <%= helpers.formatDate(i.startedAt, timezone) %></div>
+        <ul class="sp-updates">
+          <% i.updates.forEach(u => { %><li><span class="sp-muted"><%= helpers.formatDate(u.createdAt, timezone, false) %></span> <%= u.message %></li><% }) %>
+        </ul>
+      </article>
+    <% }) %>
+  </section>
+  <% } %>
+
+  <% if (view.maintenance.length) { %>
+  <section class="sp-card">
+    <h2>Manutenções</h2>
+    <% view.maintenance.forEach(w => { %>
+      <div class="sp-maint">
+        <div><strong><%= w.title %></strong> <span class="sp-tag"><%= w.status === 'active' ? 'em andamento' : 'programada' %></span></div>
+        <div class="sp-muted"><%= helpers.formatDate(w.startsAt, timezone, false) %> → <%= helpers.formatDate(w.endsAt, timezone, false) %></div>
+        <% if (w.description) { %><div class="sp-muted"><%= w.description %></div><% } %>
+      </div>
+    <% }) %>
+  </section>
+  <% } %>
+
+  <% view.groups.forEach(g => { %>
+  <section class="sp-card">
+    <h2><%= g.label %></h2>
+    <% g.monitors.forEach(m => { %>
+      <article class="sp-svc">
+        <div class="sp-svc__row">
+          <span class="sp-svc__name"><%= m.name %></span>
+          <span class="sp-badge sp-badge--<%= m.cls %>"><span class="sp-dot"></span><%= m.label %></span>
+        </div>
+        <div class="sp-svc__meta">
+          <% if (page.showUptime) { %><span>Uptime 24h <b><%= m.uptime24h !== null ? m.uptime24h.toFixed(2) + '%' : '—' %></b></span>
+          <span>7 dias <b><%= m.uptime7d !== null ? m.uptime7d.toFixed(2) + '%' : '—' %></b></span>
+          <span>30 dias <b><%= m.uptime30d !== null ? m.uptime30d.toFixed(2) + '%' : '—' %></b></span><% } %>
+          <% if (page.showLatency) { %><span>Latência <b><%= m.latencyMs !== null ? m.latencyMs + ' ms' : '—' %></b></span><% } %>
+          <span class="sp-muted">Última verificação <%= helpers.formatDate(m.lastCheckAt, timezone) %></span>
+        </div>
+        <% if (page.showHistory && m.bars) { %>
+        <div class="sp-bars" aria-label="Histórico de 90 dias">
+          <% m.bars.forEach(b => { %><span class="sp-bar sp-bar--<%= b.state %>" title="<%= b.day %>"></span><% }) %>
+        </div>
+        <% } %>
+        <% if (page.showDependencies && (m.dependsOn.length || m.impact)) { %>
+        <div class="sp-deps">
+          <% if (m.dependsOn.length) { %><span class="sp-muted">Depende de: <%= m.dependsOn.join(', ') %></span><% } %>
+          <% if (m.impact) { %><span class="sp-muted">Impacto: <%= m.impact %> serviço(s) afetado(s)</span><% } %>
+        </div>
+        <% } %>
+      </article>
+    <% }) %>
+  </section>
+  <% }) %>
+
+  <% if (view.history.length) { %>
+  <section class="sp-card">
+    <h2>Histórico de incidentes</h2>
+    <ul class="sp-history">
+      <% view.history.forEach(i => { %>
+        <li><span><%= i.title %></span>
+          <span class="sp-muted"><%= helpers.formatDate(i.startedAt, timezone, false) %> · duração <%= helpers.formatDuration((Date.parse(i.resolvedAt) - Date.parse(i.startedAt)) / 1000) %></span></li>
+      <% }) %>
+    </ul>
+  </section>
+  <% } %>
+
+  <% if (page.showFooter) { %>
+  <footer class="sp-foot">
+    <span>Atualizado em <%= helpers.formatDate(view.generatedAt, timezone) %></span>
+    <span>Noxis Uptime</span>
+  </footer>
+  <% } %>
+</main>
+</body>
+</html>

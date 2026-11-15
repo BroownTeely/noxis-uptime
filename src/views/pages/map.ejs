@@ -1,0 +1,34 @@
+<%- include('../partials/shell-start') %>
+<section class="card">
+  <header class="card__head">
+    <h2>Mapa da infraestrutura</h2>
+    <span class="muted"><%= map.nodes.length %> serviços · <%= map.edges.length %> dependências</span>
+  </header>
+  <% if (!map.nodes.length) { %>
+    <p class="empty">Nenhum monitor cadastrado.</p>
+  <% } else { %>
+  <div class="map-wrap">
+    <svg class="map-svg" viewBox="0 0 <%= map.width %> <%= map.height %>" role="img" aria-label="Mapa de dependências entre serviços">
+      <defs>
+        <marker id="map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="map-arrow"/>
+        </marker>
+      </defs>
+      <% map.edges.forEach(e => { const my = (e.y1 + e.y2) / 2; %>
+        <path class="map-edge<%= e.required ? '' : ' map-edge--optional' %>"
+              d="M<%= e.x1 %>,<%= e.y1 %> C<%= e.x1 %>,<%= my %> <%= e.x2 %>,<%= my %> <%= e.x2 %>,<%= e.y2 %>"
+              marker-end="url(#map-arrow)"/>
+      <% }) %>
+      <% map.nodes.forEach(n => { const x = n.x - map.nodeW / 2; %>
+        <a href="/monitors/<%= n.id %>">
+          <rect class="map-node map-node--<%= n.state.toLowerCase() %>" x="<%= x %>" y="<%= n.y %>" width="<%= map.nodeW %>" height="<%= map.nodeH %>" rx="10"/>
+          <text class="map-name" x="<%= n.x %>" y="<%= n.y + 22 %>" text-anchor="middle"><%= n.name %></text>
+          <text class="map-state" x="<%= n.x %>" y="<%= n.y + 40 %>" text-anchor="middle"><%= n.state %></text>
+        </a>
+      <% }) %>
+    </svg>
+  </div>
+  <p class="field__hint">Topo: serviços que ninguém depende (aplicações). Base: serviços dos quais os demais precisam. Linhas tracejadas são dependências opcionais. Clique em um serviço para ver os detalhes.</p>
+  <% } %>
+</section>
+<%- include('../partials/shell-end') %>

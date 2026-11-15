@@ -1,0 +1,58 @@
+<% locals.headerActions = '<button class="btn btn--primary" id="newUserBtn" type="button">Novo usuário</button>'; %>
+<%- include('../partials/shell-start') %>
+<section class="card card--flush">
+  <div class="table-wrap">
+    <table class="table" id="usersTable">
+      <thead><tr><th>Usuário</th><th>Nome</th><th>Papel</th><th>Situação</th><th>Último acesso</th></tr></thead>
+      <tbody>
+        <% users.forEach(u => { %>
+        <tr data-user-id="<%= u.id %>">
+          <td class="mono"><%= u.username %></td>
+          <td><%= u.displayName %></td>
+          <td>
+            <% if (u.role === 'owner' && user.role !== 'owner') { %><span class="badge">Owner</span><% } else { %>
+            <select data-field="role" aria-label="Papel de <%= u.username %>" <%= u.id === user.id ? 'disabled' : '' %>>
+              <% roles.forEach(r => { if (r === 'owner' && user.role !== 'owner' && u.role !== 'owner') return; %>
+                <option value="<%= r %>" <%= u.role === r ? 'selected' : '' %>><%= roleLabel(r) %></option>
+              <% }) %>
+            </select><% } %>
+          </td>
+          <td>
+            <label class="switch"><input type="checkbox" data-field="active" <%= u.active ? 'checked' : '' %> <%= u.id === user.id ? 'disabled' : '' %>><span>Ativo</span></label>
+          </td>
+          <td class="mono"><%= u.lastLoginAt ? helpers.formatDate(u.lastLoginAt, timezone) : 'Nunca' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<dialog class="modal" id="userModal" aria-labelledby="userModalTitle">
+  <form method="dialog" class="modal__close-form"><button class="icon-btn" aria-label="Fechar">✕</button></form>
+  <form id="userForm" class="modal__body form">
+    <h2 id="userModalTitle">Novo usuário</h2>
+    <label class="field"><span class="field__label">Usuário</span><input name="username" required minlength="3" maxlength="32"></label>
+    <label class="field"><span class="field__label">Nome exibido</span><input name="displayName" maxlength="80"></label>
+    <label class="field"><span class="field__label">Senha inicial</span><input name="password" type="password" required minlength="10" autocomplete="new-password"></label>
+    <label class="field"><span class="field__label">Papel</span>
+      <select name="role"><% roles.filter(r => r !== 'owner').forEach(r => { %><option value="<%= r %>" <%= r === 'viewer' ? 'selected' : '' %>><%= roleLabel(r) %></option><% }) %></select></label>
+    <div class="alert alert--error" id="userErrors" hidden role="alert"></div>
+    <footer class="modal__footer"><button class="btn btn--ghost" type="button" data-close>Cancelar</button><button class="btn btn--primary" type="submit">Criar</button></footer>
+  </form>
+</dialog>
+<section class="card">
+  <header class="card__head"><h2>Permissões por papel</h2></header>
+  <div class="table-wrap"><table class="table perm-table">
+    <thead><tr><th>Recurso</th><th>Owner</th><th>Admin</th><th>Editor</th><th>Visualizador</th></tr></thead>
+    <tbody>
+      <tr><td>Visualizar painel, monitores e incidentes</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Criar e editar monitores, grupos, manutenções</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
+      <tr><td>Excluir monitores e grupos</td><td>✓</td><td>✓</td><td></td><td></td></tr>
+      <tr><td>Webhooks, configurações, usuários, chaves de API, logs</td><td>✓</td><td>✓</td><td></td><td></td></tr>
+      <tr><td>Promover ou alterar um owner</td><td>✓</td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table></div>
+</section>
+<% locals.pageScript = 'users' %>
+<%- include('../partials/shell-end') %>

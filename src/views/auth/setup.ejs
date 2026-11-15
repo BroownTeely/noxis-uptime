@@ -1,0 +1,27 @@
+<%- include('../partials/head', { title: 'Configuração inicial', bodyClass: 'auth-body' }) %>
+<main class="auth">
+  <section class="auth__card auth__card--wide" aria-labelledby="setup-title">
+    <div class="brand brand--lg">
+      <img class="brand__logo" src="/static/img/logo.svg" width="34" height="34" alt="">
+      <span class="brand__name">Noxis <strong>Uptime</strong></span>
+    </div>
+    <h1 id="setup-title">Conta de owner</h1>
+    <p class="muted">Crie a conta principal. Ela terá acesso total ao sistema.</p>
+    <% if (error) { %><p class="alert alert--error" role="alert"><%= error %></p><% } %>
+    <form method="post" action="/setup" class="form" novalidate>
+      <label class="field"><span class="field__label">Usuário</span>
+        <input name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_.\-]{3,32}" value="<%= values.username || '' %>" autocomplete="username"></label>
+      <label class="field"><span class="field__label">Nome exibido</span>
+        <input name="displayName" maxlength="80" value="<%= values.displayName || '' %>"></label>
+      <label class="field"><span class="field__label">Senha</span>
+        <input name="password" type="password" required minlength="10" autocomplete="new-password"
+               aria-describedby="pw-hint"></label>
+      <p class="field__hint" id="pw-hint">Mínimo de 10 caracteres, com letras e números.</p>
+      <label class="field"><span class="field__label">Confirmar senha</span>
+        <input name="confirm" type="password" required minlength="10" autocomplete="new-password"></label>
+      <button class="btn btn--primary btn--block" type="submit">Criar conta e entrar</button>
+    </form>
+  </section>
+</main>
+</body>
+</html>

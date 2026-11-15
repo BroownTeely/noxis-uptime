@@ -1,0 +1,29 @@
+<%- include('../partials/shell-start') %>
+<section class="toolbar">
+  <div class="segmented" role="tablist">
+    <a class="<%= state === null ? 'is-on' : '' %>" href="/incidents" role="tab">Todos</a>
+    <a class="<%= state === true ? 'is-on' : '' %>" href="/incidents?state=open" role="tab">Abertos</a>
+    <a class="<%= state === false ? 'is-on' : '' %>" href="/incidents?state=resolved" role="tab">Resolvidos</a>
+  </div>
+</section>
+<section class="card card--flush">
+  <div class="table-wrap">
+    <table class="table" id="incidentsTable">
+      <thead><tr><th>Status</th><th>Incidente</th><th>Monitor</th><th>Severidade</th><th>Início</th><th>Duração</th></tr></thead>
+      <tbody>
+        <% incidents.forEach(i => { const open = i.status !== 'resolved'; %>
+        <tr data-incident-id="<%= i.id %>">
+          <td><span class="badge badge--<%= open ? 'down' : 'up' %>" data-field="status"><%= open ? i.status : 'resolved' %></span></td>
+          <td><a class="strong" href="/incidents/<%= i.id %>"><%= i.title %></a></td>
+          <td><%= i.monitorName || '—' %></td>
+          <td><span class="badge badge--sev-<%= i.severity %>"><%= i.severity %></span></td>
+          <td class="mono"><%= helpers.formatDate(i.startedAt, timezone) %></td>
+          <td class="mono"><%= i.resolvedAt ? helpers.formatDuration((Date.parse(i.resolvedAt) - Date.parse(i.startedAt)) / 1000) : helpers.formatDuration((Date.now() - Date.parse(i.startedAt)) / 1000) %></td>
+        </tr>
+        <% }) %>
+        <% if (!incidents.length) { %><tr><td colspan="6" class="empty">Nenhum incidente</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<%- include('../partials/shell-end') %>

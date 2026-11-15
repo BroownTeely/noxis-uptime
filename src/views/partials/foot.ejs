@@ -1,0 +1,5 @@
+<script type="application/json" id="app-data"><%- safeJson({ timezone: timezone, csrf: csrfToken || '', user: user || null, version: appVersion || config.version, page: typeof pageScript !== 'undefined' ? pageScript : '' }) %></script>
+<% if (typeof user !== 'undefined' && user) { %><script src="/socket.io/socket.io.js" defer></script><% } %>
+<script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

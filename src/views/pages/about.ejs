@@ -1,0 +1,12 @@
+<%- include('../partials/shell-start') %>
+<section class="card about">
+  <header class="card__head">
+    <div>
+      <h2>Noxis Uptime</h2>
+      <span class="muted">Versão instalada <span class="mono"><%= version %></span> · <a class="link" href="https://github.com/<%= repo %>" target="_blank" rel="noopener noreferrer">Repositório no GitHub</a></span>
+    </div>
+    <a class="btn btn--sm" href="/atualizacao">Atualizações</a>
+  </header>
+  <article class="md"><%- readmeHtml %></article>
+</section>
+<%- include('../partials/shell-end') %>

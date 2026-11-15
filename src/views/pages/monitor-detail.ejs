@@ -1,0 +1,150 @@
+<% const st = helpers.statusMeta(monitor.status); const canEdit = ['owner','admin','editor'].includes(user.role); const pctv = v => v === null || v === undefined ? '—' : v.toFixed(2) + '%'; %>
+<%- include('../partials/shell-start') %>
+<% locals.headerActions = canEdit ? '<button class="btn" data-action="run" data-id="' + monitor.id + '">Executar agora</button><button class="btn" type="button" data-open-fragment="/fragments/monitor-form?id=' + monitor.id + '" data-fragment="monitor-form" data-title="Editar monitor">Editar</button>' : ''; %>
+<section class="detail-head card" data-monitor-id="<%= monitor.id %>">
+  <div class="detail-head__main">
+    <span class="badge badge--<%= st.cls %> badge--lg" data-field="status"><span class="badge__dot"></span><%= st.label %></span>
+    <div>
+      <h2 class="detail-head__name"><%= monitor.name %></h2>
+      <p class="muted mono"><%= monitor.type.toUpperCase() %> · <%= monitor.target %></p>
+    </div>
+  </div>
+  <% if (canEdit) { %>
+  <div class="detail-head__actions">
+    <button class="btn btn--sm" data-action="toggle" data-id="<%= monitor.id %>" data-active="<%= monitor.active %>"><%= monitor.active ? 'Pausar' : 'Retomar' %></button>
+    <button class="btn btn--sm" data-action="duplicate" data-id="<%= monitor.id %>">Duplicar</button>
+    <% if (monitor.type === 'push') { %><button class="btn btn--sm" data-action="rotate-push" data-id="<%= monitor.id %>">Novo token</button><% } %>
+    <% if (['owner','admin'].includes(user.role)) { %><button class="btn btn--sm btn--danger" data-action="delete" data-id="<%= monitor.id %>">Excluir</button><% } %>
+  </div>
+  <% } %>
+</section>
+
+<% if (monitor.type === 'push') { %>
+<section class="card">
+  <header class="card__head"><h2>URL de heartbeat</h2></header>
+  <code class="copy-box mono" id="pushUrl" data-push-path="/api/push/<%= monitor.pushToken %>">
+    <%= (typeof baseUrl !== 'undefined' ? baseUrl : '') %>/api/push/<%= monitor.pushToken %>
+  </code>
+  <p class="muted">Exemplo: <code class="mono">curl -fsS "URL?status=up&amp;msg=ok"</code>. Use <code class="mono">status=down</code> para sinalizar falha.</p>
+</section>
+<% } %>
+
+<section class="kpis kpis--detail" id="detailMetrics">
+  <article class="kpi"><span class="kpi__label">Uptime 24h</span><strong class="kpi__value" data-uptime="24h">—</strong></article>
+  <article class="kpi"><span class="kpi__label">Uptime 7 dias</span><strong class="kpi__value" data-uptime="7d">—</strong></article>
+  <article class="kpi"><span class="kpi__label">Uptime 30 dias</span><strong class="kpi__value" data-uptime="30d">—</strong></article>
+  <article class="kpi"><span class="kpi__label">Uptime 90 dias</span><strong class="kpi__value" data-uptime="90d">—</strong></article>
+  <article class="kpi"><span class="kpi__label">Latência atual</span><strong class="kpi__value mono" data-latency="current"><%= monitor.lastLatencyMs !== null ? monitor.lastLatencyMs + ' ms' : '—' %></strong></article>
+  <article class="kpi"><span class="kpi__label">Média (7d)</span><strong class="kpi__value mono" data-latency="avg">—</strong></article>
+  <article class="kpi"><span class="kpi__label">Mínima (7d)</span><strong class="kpi__value mono" data-latency="min">—</strong></article>
+  <article class="kpi"><span class="kpi__label">Máxima (7d)</span><strong class="kpi__value mono" data-latency="max">—</strong></article>
+</section>
+
+<section class="grid grid--2">
+  <article class="card">
+    <header class="card__head"><h2>Informações</h2></header>
+    <dl class="info-list">
+      <div><dt>Grupo</dt><dd><%= monitor.groupName || 'Sem grupo' %></dd></div>
+      <div><dt>Tags</dt><dd><%= (monitor.tags || []).join(', ') || '—' %></dd></div>
+      <div><dt>Intervalo / timeout</dt><dd class="mono"><%= monitor.intervalSeconds %>s / <%= monitor.timeoutSeconds %>s</dd></div>
+      <div><dt>Tentativas</dt><dd class="mono"><%= monitor.retries %></dd></div>
+      <div><dt>Última verificação</dt><dd class="mono" data-field="lastCheck"><%= helpers.formatDate(monitor.lastCheckAt, timezone) %></dd></div>
+      <div><dt>Próxima verificação</dt><dd class="mono" data-field="nextCheck"><%= helpers.formatDate(monitor.nextCheckAt, timezone) %></dd></div>
+      <div><dt>Criado em</dt><dd class="mono"><%= helpers.formatDate(monitor.createdAt, timezone, false) %></dd></div>
+      <div><dt>Mensagem atual</dt><dd data-field="message"><%= monitor.lastMessage || '—' %></dd></div>
+    </dl>
+  </article>
+  <article class="card">
+    <header class="card__head"><h2>Disponibilidade diária (90 dias)</h2></header>
+    <div class="heartbeat" id="heartbeatBars" aria-label="Barras de disponibilidade diária">
+      <% bars.forEach(b => { %><span class="hb hb--<%= b.state %>" title="<%= b.day %><%= b.uptime !== null ? ' · ' + b.uptime + '%' : ' · sem dados' %>"></span><% }) %>
+    </div>
+    <div class="legend muted"><span class="hb hb--up"></span>Disponível <span class="hb hb--partial"></span>Parcial <span class="hb hb--down"></span>Indisponível <span class="hb hb--nodata"></span>Sem dados</div>
+  </article>
+</section>
+
+<section class="card card--chart">
+  <header class="card__head"><h2>Latência (últimas 24 h)</h2></header>
+  <div class="chart" id="chartMonitorLatency"></div>
+</section>
+
+<section class="grid grid--2-1">
+  <article class="card">
+    <header class="card__head"><h2>Histórico de eventos</h2></header>
+    <div class="table-wrap table-wrap--short">
+      <table class="table"><thead><tr><th>Quando</th><th>Transição</th><th>Duração anterior</th><th>Detalhe</th></tr></thead>
+        <tbody data-list="events">
+          <% events.forEach(e => { const to = helpers.statusMeta(e.newStatus); %>
+          <tr><td class="mono"><%= helpers.formatDate(e.createdAt, timezone) %></td>
+            <td><span class="badge badge--<%= to.cls %>"><%= to.label %></span></td>
+            <td class="mono"><%= helpers.formatDuration(e.durationSeconds) %></td>
+            <td class="muted cell-wrap"><%= e.message || '' %></td></tr>
+          <% }) %>
+          <% if (!events.length) { %><tr><td colspan="4" class="empty">Sem eventos</td></tr><% } %>
+        </tbody></table>
+    </div>
+  </article>
+  <article class="card">
+    <header class="card__head"><h2>Incidentes</h2></header>
+    <ul class="timeline">
+      <% incidents.forEach(i => { %><li class="timeline__item"><span class="dot dot--<%= i.status === 'resolved' ? 'up' : 'down' %>"></span>
+        <div><a href="/incidents/<%= i.id %>"><%= i.title %></a><small class="muted"><%= helpers.formatDate(i.startedAt, timezone) %> · <%= i.status === 'resolved' ? 'Resolvido' : 'Aberto' %></small></div></li><% }) %>
+      <% if (!incidents.length) { %><li class="empty">Nenhum incidente</li><% } %>
+    </ul>
+  </article>
+</section>
+
+<section class="card" id="depsCard" data-monitor-id="<%= monitor.id %>">
+  <header class="card__head"><h2>Dependências</h2>
+    <span class="badge badge--<%= dependencies.state.toLowerCase() %>">Estado: <%= dependencies.state %></span></header>
+  <% if (dependencies.rootCauses.length) { %>
+    <p class="alert alert--error">Possível causa raiz: <%= dependencies.rootCauses.join(', ') %></p>
+  <% } %>
+  <% if (dependencies.tree.length) { %>
+    <ul class="dep-tree" aria-label="Árvore de dependências">
+      <% dependencies.tree.forEach(n => { %>
+        <li style="padding-left: <%= (n.depth - 1) * 20 %>px">
+          <span class="dep-branch"><%= n.depth > 1 ? '└─ ' : '' %></span>
+          <span class="badge badge--<%= n.state.toLowerCase() %>"><%= n.state %></span>
+          <a href="/monitors/<%= n.id %>"><%= n.name %></a>
+          <span class="muted">(<%= n.required ? 'obrigatória' : 'opcional' %>)</span>
+          <% if (n.depth === 1 && ['owner','admin','editor'].includes(user.role)) { %>
+          <button class="icon-btn icon-btn--danger dep-remove" type="button" data-dep-remove="<%= n.id %>" aria-label="Remover dependência de <%= n.name %>" title="Remover">×</button>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %><p class="muted">Este monitor não depende de outros.</p><% } %>
+  <% if (dependencies.dependents.length) { %>
+    <p class="muted">Dependentes: <%= dependencies.dependents.map(d => d.name).join(', ') %></p>
+  <% } %>
+  <% if (['owner','admin','editor'].includes(user.role)) { %>
+  <form id="depForm" class="form-grid dep-form">
+    <label class="field field--span-2"><span class="field__label">Depende de</span>
+      <select name="dependsOnId"><option value="">Selecione…</option>
+        <% allMonitors.forEach(m => { %><option value="<%= m.id %>"><%= m.name %></option><% }) %>
+      </select></label>
+    <label class="check"><input type="checkbox" name="required" checked><span>Obrigatória</span></label>
+    <button class="btn btn--sm" type="submit">Adicionar dependência</button>
+  </form>
+  <% } %>
+</section>
+
+<section class="card">
+  <header class="card__head"><h2>Verificações recentes</h2></header>
+  <div class="table-wrap table-wrap--short">
+    <table class="table"><thead><tr><th>Horário</th><th>Resultado</th><th class="num">Latência</th><th>Mensagem</th></tr></thead>
+      <tbody data-list="checks">
+        <% checks.forEach(c => { const st2 = helpers.statusMeta(c.status); %>
+        <tr><td class="mono"><%= helpers.formatDate(c.checkedAt, timezone) %></td>
+          <td><span class="badge badge--<%= c.ok ? 'up' : 'down' %>"><%= c.ok ? 'OK' : 'Falha' %></span></td>
+          <td class="num mono"><%= c.latencyMs !== null ? c.latencyMs + ' ms' : '—' %></td>
+          <td class="muted cell-wrap"><%= c.message || '' %></td></tr>
+        <% }) %>
+        <% if (!checks.length) { %><tr><td colspan="4" class="empty">Sem verificações</td></tr><% } %>
+      </tbody></table>
+  </div>
+</section>
+<script type="application/json" id="monitor-seed"><%- safeJson({ id: monitor.id, series: series, seriesWeek: seriesWeek }) %></script>
+<% locals.pageScript = 'monitor-detail' %>
+<%- include('../partials/shell-end') %>

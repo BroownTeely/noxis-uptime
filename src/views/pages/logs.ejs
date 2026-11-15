@@ -1,0 +1,22 @@
+<%- include('../partials/shell-start') %>
+<section class="toolbar">
+  <input type="search" id="logSearch" placeholder="Buscar ação, usuário ou detalhe" aria-label="Buscar nos logs">
+  <select id="logSeverity" aria-label="Severidade">
+    <option value="">Todas as severidades</option><option value="info">Info</option><option value="notice">Aviso</option><option value="warning">Atenção</option><option value="error">Erro</option>
+  </select>
+  <select id="logEntity" aria-label="Entidade">
+    <option value="">Todas as entidades</option><option value="monitor">Monitor</option><option value="incident">Incidente</option><option value="user">Usuário</option>
+    <option value="notification_channel">Webhook</option><option value="settings">Configurações</option><option value="api_key">Chave de API</option><option value="maintenance">Manutenção</option>
+  </select>
+</section>
+<section class="card card--flush">
+  <div class="table-wrap">
+    <table class="table" id="logTable">
+      <thead><tr><th>Quando</th><th>Severidade</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Detalhe</th><th>IP</th></tr></thead>
+      <tbody><tr><td colspan="7" class="empty">Carregando</td></tr></tbody>
+    </table>
+  </div>
+  <footer class="pager" id="logPager"></footer>
+</section>
+<% locals.pageScript = 'logs' %>
+<%- include('../partials/shell-end') %>

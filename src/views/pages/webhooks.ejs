@@ -1,0 +1,124 @@
+<% locals.headerActions = '<button class="btn btn--primary" id="newChannelBtn" type="button">Novo canal</button>'; %>
+<%- include('../partials/shell-start') %>
+<section class="channel-grid" id="channelList">
+  <% channels.forEach(c => { %>
+  <article class="card channel" data-channel-id="<%= c.id %>">
+    <header class="card__head">
+      <div>
+        <span class="badge badge--unknown channel__type"><%= c.typeLabel %></span>
+        <h2><%= c.name %></h2>
+        <span class="mono muted channel__target"><%= c.summary %></span>
+      </div>
+      <span class="badge badge--<%= c.enabled ? 'up' : 'paused' %>"><%= c.enabled ? 'Ativo' : 'Inativo' %></span>
+    </header>
+    <div class="tags"><% c.events.forEach(e => { %><span class="tag"><%= e %></span><% }) %></div>
+    <dl class="info-list info-list--compact">
+      <div><dt>Monitores</dt><dd><%= c.monitorIds.length ? c.monitorIds.length + ' específico(s)' : 'Todos' %></dd></div>
+      <div><dt>Grupos</dt><dd><%= c.groupIds.length ? c.groupIds.length + ' específico(s)' : 'Todos' %></dd></div>
+      <div><dt>Último envio</dt><dd class="mono"><%= c.lastSentAt ? helpers.formatDate(c.lastSentAt, timezone) : '—' %></dd></div>
+      <div><dt>Último erro</dt><dd class="c-down"><%= c.lastError || '—' %></dd></div>
+    </dl>
+    <footer class="channel__actions">
+      <button class="btn btn--sm" data-action="test" data-id="<%= c.id %>">Enviar teste</button>
+      <button class="btn btn--sm" data-action="log" data-id="<%= c.id %>">Histórico</button>
+      <button class="btn btn--sm" data-action="edit" data-id="<%= c.id %>">Editar</button>
+      <button class="btn btn--sm btn--danger" data-action="delete" data-id="<%= c.id %>">Excluir</button>
+    </footer>
+  </article>
+  <% }) %>
+  <% if (!channels.length) { %><article class="card empty">Nenhum canal configurado</article><% } %>
+</section>
+
+<dialog class="modal modal--wide" id="channelModal" aria-labelledby="channelModalTitle">
+  <form method="dialog" class="modal__close-form"><button class="icon-btn" aria-label="Fechar">✕</button></form>
+  <form id="channelForm" class="modal__body form">
+    <h2 id="channelModalTitle">Novo canal</h2>
+    <input type="hidden" name="id">
+    <div class="form-grid">
+      <label class="field"><span class="field__label">Tipo</span>
+        <select name="type" id="channelType">
+          <option value="discord">Discord (webhook)</option>
+          <option value="ntfy">ntfy (self-hosted)</option>
+          <option value="webhook">Webhook HTTP (JSON assinado)</option>
+          <option value="telegram">Telegram (bot)</option>
+        </select></label>
+      <label class="field"><span class="field__label">Nome</span><input name="name" required maxlength="80"></label>
+      <label class="check field--span-2"><input type="checkbox" name="enabled" checked><span>Ativo</span></label>
+    </div>
+
+    <div class="form-grid" data-for-type="discord">
+      <label class="field field--span-2"><span class="field__label">URL do webhook</span>
+        <input name="webhookUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
+    </div>
+    <div class="form-grid" data-for-type="ntfy" hidden>
+      <label class="field field--span-2"><span class="field__label">Endereço do servidor</span>
+        <input name="serverUrl" placeholder="http://ntfy.lan:8080"></label>
+      <label class="field"><span class="field__label">Tópico</span><input name="topic" placeholder="noxis-alertas" maxlength="64"></label>
+      <label class="field"><span class="field__label">Prioridade (1 a 5)</span>
+        <input name="priority" type="number" min="1" max="5" value="4"></label>
+      <label class="field field--span-2"><span class="field__label">Token de acesso (opcional)</span>
+        <input name="token" type="password" autocomplete="new-password" placeholder="Mantido se vazio"></label>
+      <p class="field__hint field--span-2">Mensagens de queda usam prioridade máxima; recuperações usam prioridade normal.</p>
+    </div>
+    <div class="form-grid" data-for-type="telegram" hidden>
+      <label class="field field--span-2"><span class="field__label">Token do bot</span>
+        <input name="botToken" type="password" autocomplete="new-password" placeholder="123456:ABC... (mantido se vazio)"></label>
+      <label class="field"><span class="field__label">ID do chat ou @canal</span><input name="chatId" placeholder="-1001234567890"></label>
+      <p class="field__hint field--span-2">Crie o bot com o @BotFather, envie uma mensagem para ele e use o ID do chat que aparece na API do bot.</p>
+    </div>
+    <div class="form-grid" data-for-type="webhook" hidden>
+      <label class="field field--span-2"><span class="field__label">URL de destino</span>
+        <input name="url" placeholder="http://n8n.lan:5678/webhook/noxis"></label>
+      <label class="field field--span-2"><span class="field__label">Segredo de assinatura (opcional)</span>
+        <input name="secret" type="password" autocomplete="new-password" placeholder="Mantido se vazio">
+        <span class="field__hint">Quando definido, cada envio traz o cabeçalho X-Noxis-Signature (HMAC-SHA256 do corpo).</span></label>
+    </div>
+
+    <fieldset class="field"><legend class="field__label">Eventos</legend>
+      <div class="check-grid">
+        <% events.forEach(e => { %><label class="check"><input type="checkbox" name="events" value="<%= e.value %>"><span><%= e.label %></span></label><% }) %>
+      </div></fieldset>
+
+    <div data-for-type="discord">
+      <div class="form-grid">
+        <label class="field"><span class="field__label">IDs de usuários para menção</span><input name="mentionUserIds" placeholder="123456789012345678"></label>
+        <label class="field"><span class="field__label">IDs de cargos para menção</span><input name="mentionRoleIds" placeholder="123456789012345678"></label>
+      </div>
+      <fieldset class="field"><legend class="field__label">Mencionar em</legend>
+        <div class="check-grid">
+          <% events.forEach(e => { %><label class="check"><input type="checkbox" name="mentionOn" value="<%= e.value %>"><span><%= e.label %></span></label><% }) %>
+        </div></fieldset>
+      <div class="embed-preview" id="embedPreview">
+        <div class="embed-preview__head">
+          <select id="previewKind" aria-label="Tipo de pré-visualização">
+            <option value="down">Monitor offline</option><option value="up">Recuperado</option><option value="ssl">SSL expirando</option><option value="incident">Incidente</option>
+          </select>
+          <button class="btn btn--sm" type="button" id="previewBtn">Atualizar pré-visualização</button>
+        </div>
+        <div class="embed" id="embedBox"></div>
+      </div>
+    </div>
+
+    <fieldset class="field"><legend class="field__label">Monitores (vazio = todos)</legend>
+      <div class="check-grid"><% monitors.forEach(m => { %><label class="check"><input type="checkbox" name="monitorIds" value="<%= m.id %>"><span><%= m.name %></span></label><% }) %></div></fieldset>
+    <fieldset class="field"><legend class="field__label">Grupos (vazio = todos)</legend>
+      <div class="check-grid"><% groups.forEach(g => { %><label class="check"><input type="checkbox" name="groupIds" value="<%= g.id %>"><span><%= g.name %></span></label><% }) %></div></fieldset>
+
+    <div class="alert alert--error" id="channelErrors" hidden role="alert"></div>
+    <footer class="modal__footer">
+      <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+      <button class="btn btn--primary" type="submit">Salvar</button>
+    </footer>
+  </form>
+</dialog>
+
+<dialog class="modal modal--wide" id="logModal" aria-labelledby="logModalTitle">
+  <form method="dialog" class="modal__close-form"><button class="icon-btn" aria-label="Fechar">✕</button></form>
+  <div class="modal__body">
+    <h2 id="logModalTitle">Histórico de envios</h2>
+    <div class="table-wrap"><table class="table"><thead><tr><th>Quando</th><th>Evento</th><th>Status</th><th>HTTP</th><th>Tentativas</th><th>Erro</th></tr></thead>
+      <tbody id="logBody"></tbody></table></div>
+  </div>
+</dialog>
+<% locals.pageScript = 'webhooks' %>
+<%- include('../partials/shell-end') %>

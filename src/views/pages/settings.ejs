@@ -1,0 +1,117 @@
+<%- include('../partials/shell-start') %>
+<div class="settings">
+  <nav class="settings__tabs" role="tablist" aria-label="Categorias">
+    <button type="button" role="tab" aria-selected="true" data-tab="geral">Geral</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="monitoramento">Monitoramento</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="notificacoes">Notificações</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="seguranca">Segurança e rede</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="api">API</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="sistema">Sistema</button>
+  </nav>
+
+  <form id="settingsForm" class="settings__panel card" data-tab-panel="geral">
+    <h2>Geral</h2>
+    <div class="form-grid">
+      <label class="field"><span class="field__label">Nome da instalação</span><input name="siteName" maxlength="80" value="<%= values.siteName %>"></label>
+      <label class="field"><span class="field__label">Fuso horário</span><input name="timezone" maxlength="60" value="<%= values.timezone %>"></label>
+      <label class="field"><span class="field__label">Idioma</span><input value="Português (Brasil)" disabled></label>
+      <label class="field"><span class="field__label">Retenção do histórico (dias)</span><input name="retentionDays" type="number" min="1" max="3650" value="<%= values.retentionDays %>"></label>
+    </div>
+    <div class="form-actions"><button class="btn btn--primary" type="submit">Salvar</button></div>
+  </form>
+
+  <section class="settings__panel card" data-tab-panel="monitoramento" hidden>
+    <h2>Padrões de monitoramento</h2>
+    <form id="settingsFormMon" class="form-grid">
+      <label class="field"><span class="field__label">Intervalo padrão (s)</span><input name="checkInterval" type="number" min="10" max="86400" value="<%= values.checkInterval %>"></label>
+      <label class="field"><span class="field__label">Timeout padrão (s)</span><input name="checkTimeout" type="number" min="1" max="60" value="<%= values.checkTimeout %>"></label>
+      <label class="field"><span class="field__label">Tentativas padrão</span><input name="retries" type="number" min="0" max="10" value="<%= values.retries %>"></label>
+      <label class="field"><span class="field__label">Limite de latência (ms)</span><input name="latencyThresholdMs" type="number" min="1" max="60000" value="<%= values.latencyThresholdMs %>"></label>
+      <label class="field field--span-2"><span class="field__label">Alertas de vencimento SSL (dias, separados por vírgula)</span>
+        <input name="sslAlertDays" value="<%= values.sslAlertDays.join(', ') %>" placeholder="30, 14, 7, 3, 1">
+        <span class="field__hint">Um alerta é enviado a cada degrau mais urgente. Certificados renovados reiniciam o ciclo.</span></label>
+      <div class="form-actions field--span-2"><button class="btn btn--primary" type="submit">Salvar</button></div>
+    </form>
+  </section>
+
+  <section class="settings__panel card" data-tab-panel="notificacoes" hidden>
+    <h2>Notificações</h2>
+    <p class="muted">Os canais são configurados na página <a href="/notifications" class="link">Webhooks</a>.</p>
+  </section>
+
+  <section class="settings__panel card" data-tab-panel="seguranca" hidden>
+    <h2>Segurança e rede</h2>
+    <form id="settingsFormSec" class="form">
+      <label class="check"><input type="checkbox" name="allowPrivateNetworks" <%= values.allowPrivateNetworks ? 'checked' : '' %>>
+        <span>Permitir monitorar redes privadas (10/8, 172.16/12, 192.168/16, 127/8)</span></label>
+      <p class="field__hint">Destinos de link-local e metadados de nuvem (169.254.0.0/16) são sempre bloqueados.</p>
+      <div class="form-actions"><button class="btn btn--primary" type="submit">Salvar</button></div>
+    </form>
+    <h3 class="section-sub">Sessões e acesso</h3>
+    <p class="muted">As sessões expiram 7 dias após o login. Desativar um usuário encerra imediatamente suas sessões.</p>
+  </section>
+
+  <section class="settings__panel card" data-tab-panel="api" hidden>
+    <h2>Chaves de API</h2>
+    <form id="apiKeyForm" class="form-grid">
+      <label class="field"><span class="field__label">Nome</span><input name="name" required maxlength="80"></label>
+      <fieldset class="field"><legend class="field__label">Escopos</legend>
+        <div class="check-grid">
+          <% scopes.forEach(s => { %><label class="check"><input type="checkbox" name="scopes" value="<%= s %>" <%= s === 'read' ? 'checked' : '' %>><span><%= s === 'read' ? 'Leitura' : 'Escrita' %></span></label><% }) %>
+        </div></fieldset>
+      <div class="form-actions field--span-2"><button class="btn btn--primary" type="submit">Criar chave</button></div>
+    </form>
+    <div class="alert alert--success" id="newKeyBox" hidden></div>
+    <div class="table-wrap"><table class="table" id="apiKeysTable">
+      <thead><tr><th>Nome</th><th>Prefixo</th><th>Escopos</th><th>Último uso</th><th>Situação</th><th></th></tr></thead>
+      <tbody>
+        <% keys.forEach(k => { %>
+        <tr data-key-id="<%= k.id %>">
+          <td><%= k.name %></td><td class="mono"><%= k.prefix %>…</td><td><%= k.scopes.join(', ') %></td>
+          <td class="mono"><%= k.lastUsedAt ? helpers.formatDate(k.lastUsedAt, timezone) : '—' %></td>
+          <td><span class="badge badge--<%= k.revokedAt ? 'down' : 'up' %>"><%= k.revokedAt ? 'Revogada' : 'Ativa' %></span></td>
+          <td class="actions"><% if (!k.revokedAt) { %><button class="btn btn--sm btn--danger" data-action="revoke-key" data-id="<%= k.id %>">Revogar</button><% } %></td>
+        </tr>
+        <% }) %>
+        <% if (!keys.length) { %><tr><td colspan="6" class="empty">Nenhuma chave</td></tr><% } %>
+      </tbody>
+    </table></div>
+    <h3 class="section-sub">Endpoints</h3>
+    <p class="mono muted">GET /api/v1/status · GET /api/v1/monitors · POST /api/v1/monitors · GET /metrics · GET /health</p>
+  </section>
+
+  <section class="settings__panel card" data-tab-panel="sistema" hidden>
+    <h2>Sistema</h2>
+    <h3 class="section-sub">Backup do banco</h3>
+    <p class="muted">Cópia consistente do SQLite, feita com o sistema em uso. São mantidos os 10 backups mais recentes.</p>
+    <div class="form-actions form-actions--inline">
+      <button class="btn btn--primary" type="button" id="backupNow">Criar backup agora</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table" id="backupTable">
+        <thead><tr><th>Arquivo</th><th class="num">Tamanho</th><th>Criado em</th><th class="actions-col"></th></tr></thead>
+        <tbody>
+          <% backups.forEach(b => { %>
+          <tr><td class="mono"><%= b.name %></td><td class="num mono"><%= b.sizeKb %> KB</td>
+            <td class="mono"><%= helpers.formatDate(b.createdAt, timezone) %></td>
+            <td class="actions"><a class="btn btn--sm" href="/api/system/backups/<%= b.name %>">Baixar</a></td></tr>
+          <% }) %>
+          <% if (!backups.length) { %><tr><td colspan="4" class="empty">Nenhum backup criado</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+    <p class="field__hint">Restauração: pare o serviço, substitua o arquivo do banco pelo backup desejado e inicie novamente (ver docs/CONFIGURATION.md).</p>
+
+    <dl class="info-list" id="systemInfo">
+      <div><dt>Versão</dt><dd class="mono"><%= version %></dd></div>
+      <div><dt>Node.js</dt><dd class="mono" data-sys="node">—</dd></div>
+      <div><dt>Uptime do processo</dt><dd class="mono" data-sys="uptime">—</dd></div>
+      <div><dt>Memória (RSS)</dt><dd class="mono" data-sys="rss">—</dd></div>
+      <div><dt>Verificações em execução</dt><dd class="mono" data-sys="running">—</dd></div>
+      <div><dt>Fila de verificações</dt><dd class="mono" data-sys="queued">—</dd></div>
+      <div><dt>Tamanho do banco</dt><dd class="mono" data-sys="db">—</dd></div>
+    </dl>
+  </section>
+</div>
+<% locals.pageScript = 'settings' %>
+<%- include('../partials/shell-end') %>

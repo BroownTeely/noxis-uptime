@@ -1,0 +1,25 @@
+<%- include('../partials/head', { title: 'Entrar', bodyClass: 'auth-body' }) %>
+<main class="auth">
+  <section class="auth__card" aria-labelledby="login-title">
+    <div class="brand brand--lg">
+      <img class="brand__logo" src="/static/img/logo.svg" width="34" height="34" alt="">
+      <span class="brand__name">Noxis <strong>Uptime</strong></span>
+    </div>
+    <h1 id="login-title">Entrar</h1>
+    <% if (error) { %><p class="alert alert--error" role="alert"><%= error %></p><% } %>
+    <form method="post" action="/login" class="form" novalidate>
+      <input type="hidden" name="next" value="<%= next %>">
+      <label class="field">
+        <span class="field__label">Usuário</span>
+        <input name="username" autocomplete="username" required maxlength="64" value="<%= values.username || '' %>" autofocus>
+      </label>
+      <label class="field">
+        <span class="field__label">Senha</span>
+        <input name="password" type="password" autocomplete="current-password" required maxlength="256">
+      </label>
+      <button class="btn btn--primary btn--block" type="submit">Entrar</button>
+    </form>
+  </section>
+</main>
+</body>
+</html>

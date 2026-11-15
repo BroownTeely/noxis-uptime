@@ -1,0 +1,40 @@
+name: Release
+# Ao enviar uma tag vX.Y.Z, gera e publica a release com todos os arquivos.
+on:
+  push:
+    tags: ['v*.*.*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir versão da tag com package.json
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$PKG" ]; then
+            echo "A tag ${GITHUB_REF_NAME} não confere com package.json (${PKG}). Ajuste antes de publicar."
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:integration
+      - name: Gerar pacotes da release
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zip
+          bash .github/release-assets/make-release.sh "$GITHUB_WORKSPACE" "$GITHUB_REF_NAME"
+      - name: Publicar release no GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          D=".github/release-assets/dist"
+          gh release create "$GITHUB_REF_NAME" \
+            "$D/noxis-uptime-${GITHUB_REF_NAME}.zip" "$D/SHA256SUMS.txt" "$D/install.sh" "$D/noxis-uptime.service" \
+            .github/release-assets/update.sh .github/release-assets/uninstall.sh \
+            .github/release-assets/docker-compose.yml .github/release-assets/noxis.env.example \
+            --title "Noxis Uptime ${GITHUB_REF_NAME}" --generate-notes

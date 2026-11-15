@@ -1,0 +1,101 @@
+<% const nav = [
+  { label: 'Visão geral', items: [{ key: 'dashboard', href: '/', icon: 'grid', text: 'Dashboard' }] },
+  { label: 'Monitoramento', items: [
+    { key: 'monitors', href: '/monitors', icon: 'activity', text: 'Todos os monitores', dot: true },
+    { key: 'map', href: '/map', icon: 'map', text: 'Mapa' },
+    { key: 'groups', href: '/groups', icon: 'folder', text: 'Grupos' },
+    { key: 'discovery', href: '/discovery', icon: 'search', text: 'Descoberta', editor: true },
+    { key: 'status-pages', href: '/status-pages', icon: 'chart', text: 'Status pages', admin: true },
+  ] },
+  { label: 'Incidentes', items: [
+    { key: 'incidents', href: '/incidents', icon: 'alert', text: 'Incidentes', badge: 'openIncidents' },
+    { key: 'maintenance', href: '/maintenance', icon: 'tool', text: 'Manutenções' },
+  ] },
+  { label: 'Notificações', items: [{ key: 'notifications', href: '/notifications', icon: 'bell', text: 'Webhooks' }] },
+  { label: 'Análises', items: [
+    { key: 'reports', href: '/reports', icon: 'chart', text: 'Relatórios' },
+    { key: 'logs', href: '/logs', icon: 'list', text: 'Logs e auditoria', admin: true },
+    { key: 'about', href: '/sobre', icon: 'info', text: 'Sobre' },
+    { key: 'updates', href: '/atualizacao', icon: 'refresh', text: 'Atualização', admin: true, badge: 'updatePending' },
+  ] },
+  { label: 'Administração', items: [
+    { key: 'users', href: '/users', icon: 'users', text: 'Usuários', admin: true },
+    { key: 'settings', href: '/settings', icon: 'gear', text: 'Configurações', admin: true },
+  ] },
+] %>
+<aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+  <div class="sidebar__brand">
+    <a href="/" class="brand" title="Noxis Uptime">
+      <img class="brand__logo" src="/static/img/logo.svg" width="34" height="34" alt="">
+      <span class="brand__name">Noxis <strong>Uptime</strong></span>
+    </a>
+    <button class="icon-btn sidebar__toggle" id="sidebarToggle" type="button" aria-label="Recolher menu" title="Recolher menu">
+      <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+  </div>
+
+  <nav class="sidebar__nav">
+    <% nav.forEach(group => { %>
+      <% const visible = group.items.filter(i => (!i.admin && !i.editor) || (i.admin && ['owner','admin'].includes(user && user.role)) || (i.editor && ['owner','admin','editor'].includes(user && user.role))); %>
+      <% if (visible.length) { %>
+      <div class="nav-group">
+        <div class="nav-group__label"><%= group.label %></div>
+        <% visible.forEach(item => { %>
+          <a class="nav-item <%= section === item.key ? 'is-active' : '' %>" href="<%= item.href %>"
+             data-tooltip="<%= item.text %>" <%= section === item.key ? 'aria-current="page"' : '' %>>
+            <span class="nav-item__icon"><%- include('../partials/icon', { name: item.icon }) %></span>
+            <span class="nav-item__text"><%= item.text %></span>
+            <% if (item.badge) { %><span class="nav-item__badge" data-live="<%= item.badge %>" hidden>0</span><% } %>
+            <% if (item.dot) { %><span class="nav-item__dot" data-live="problemDot" hidden></span><% } %>
+          </a>
+        <% }) %>
+      </div>
+      <% } %>
+    <% }) %>
+  </nav>
+
+  <div class="sidebar__footer">
+    <section class="infra-card" aria-label="Resumo da infraestrutura">
+      <header class="infra-card__title">Resumo da infraestrutura</header>
+      <div class="infra-card__bar" aria-hidden="true">
+        <span class="seg seg--up" data-live="barUp" style="width:0%"></span>
+        <span class="seg seg--down" data-live="barDown" style="width:0%"></span>
+        <span class="seg seg--paused" data-live="barPaused" style="width:0%"></span>
+      </div>
+      <dl class="infra-card__stats">
+        <div><dt>Total</dt><dd data-live="total">—</dd></div>
+        <div><dt>Online</dt><dd data-live="online" class="c-up">—</dd></div>
+        <div><dt>Offline</dt><dd data-live="offline" class="c-down">—</dd></div>
+        <div><dt>Pausados</dt><dd data-live="paused" class="c-muted">—</dd></div>
+      </dl>
+      <div class="infra-card__avail">
+        <span>Disponibilidade 24h</span>
+        <strong data-live="availability">—</strong>
+      </div>
+    </section>
+
+    <div class="profile" id="profileMenu">
+      <button class="profile__btn" type="button" aria-haspopup="menu" aria-expanded="false">
+        <span class="avatar" aria-hidden="true"><%= (user && user.displayName ? user.displayName : '?').charAt(0).toUpperCase() %></span>
+        <span class="profile__meta">
+          <span class="profile__name"><%= user ? user.displayName : '' %></span>
+          <span class="profile__role"><%= user ? roleLabel(user.role) : '' %></span>
+        </span>
+        <svg class="profile__chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="menu" role="menu" hidden>
+        <a role="menuitem" href="/profile" class="menu__item">Configurações da conta</a>
+        <% if (user && ['owner','admin'].includes(user.role)) { %><a role="menuitem" href="/settings" class="menu__item">Configurações do sistema</a><% } %>
+        <form method="post" action="/logout" class="menu__form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button role="menuitem" class="menu__item menu__item--danger" type="submit">Sair</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="sidebar__status">
+      <span class="conn" data-conn="offline"><span class="conn__dot"></span><span class="conn__text">Conectando</span></span>
+      <span class="sidebar__version">v<%= appVersion || config.version %></span>
+    </div>
+  </div>
+</aside>

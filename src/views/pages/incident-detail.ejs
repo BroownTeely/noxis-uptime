@@ -1,0 +1,48 @@
+<% const open = incident.status !== 'resolved'; const canEdit = ['owner','admin','editor'].includes(user.role); %>
+<%- include('../partials/shell-start') %>
+<div class="grid grid--2-1">
+<section class="card" data-incident-id="<%= incident.id %>">
+  <header class="card__head">
+    <div><span class="badge badge--<%= open ? 'down' : 'up' %>" data-field="status"><%= incident.status %></span>
+      <span class="badge badge--sev-<%= incident.severity %>" data-field="severity"><%= incident.severity %></span></div>
+  </header>
+  <h2 class="detail-title"><%= incident.title %></h2>
+  <p class="muted"><%= incident.description || '' %></p>
+  <dl class="info-list">
+    <div><dt>Monitor</dt><dd><% if (incident.monitorId) { %><a href="/monitors/<%= incident.monitorId %>"><%= incident.monitorName %></a><% } else { %>—<% } %></dd></div>
+    <div><dt>Início</dt><dd class="mono"><%= helpers.formatDate(incident.startedAt, timezone) %></dd></div>
+    <div><dt>Resolução</dt><dd class="mono"><%= helpers.formatDate(incident.resolvedAt, timezone) %></dd></div>
+    <div><dt>Reconhecido</dt><dd class="mono"><%= incident.acknowledgedAt ? helpers.formatDate(incident.acknowledgedAt, timezone) : 'Não' %></dd></div>
+    <div><dt>Origem</dt><dd><%= incident.autoCreated ? 'Automática' : 'Manual' %></dd></div>
+  </dl>
+  <% if (canEdit && open) { %>
+  <div class="form-actions form-actions--inline">
+    <button class="btn btn--sm" data-action="ack">Reconhecer</button>
+  </div>
+  <% } %>
+</section>
+<aside class="card">
+  <header class="card__head"><h2>Atualizações</h2></header>
+  <ul class="timeline" id="incidentUpdates">
+    <% updates.forEach(u => { %>
+      <li class="timeline__item"><span class="dot dot--muted"></span>
+        <div><div class="strong"><%= u.status ? u.status : 'comentário' %></div><p><%= u.message %></p>
+        <small class="muted"><%= u.author || 'Sistema' %> · <%= helpers.formatDate(u.createdAt, timezone) %></small></div></li>
+    <% }) %>
+  </ul>
+  <% if (canEdit) { %>
+  <form id="incidentUpdateForm" class="form" data-incident-id="<%= incident.id %>">
+    <label class="field"><span class="field__label">Status</span>
+      <select name="status" <%= open ? '' : 'disabled' %>>
+        <option value="">Manter</option><option value="investigating">Investigando</option><option value="identified">Identificado</option><option value="monitoring">Monitorando</option><option value="resolved">Resolvido</option>
+      </select></label>
+    <label class="field"><span class="field__label">Severidade</span>
+      <select name="severity"><option value="">Manter</option><option value="minor">Leve</option><option value="major">Grave</option><option value="critical">Crítica</option></select></label>
+    <label class="field"><span class="field__label">Mensagem</span><textarea name="message" rows="3" maxlength="2000"></textarea></label>
+    <button class="btn btn--primary btn--block" type="submit">Registrar atualização</button>
+  </form>
+  <% } %>
+</aside>
+</div>
+<% locals.pageScript = 'incident-detail' %>
+<%- include('../partials/shell-end') %>

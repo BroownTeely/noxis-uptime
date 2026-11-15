@@ -1,0 +1,31 @@
+<%- include('../partials/shell-start') %>
+<section class="card update-card" id="updatePanel">
+  <header class="card__head">
+    <h2>Atualização do sistema</h2>
+    <span class="badge badge--<%= status.available ? 'pending' : 'up' %>" data-field="updateBadge"><%= status.available ? 'Atualização pendente' : 'Atualizado' %></span>
+  </header>
+  <dl class="info-list">
+    <div><dt>Versão instalada</dt><dd class="mono" data-field="current"><%= status.current %></dd></div>
+    <div><dt>Última versão</dt><dd class="mono" data-field="latest"><%= status.latest ? status.latest.version : '—' %></dd></div>
+    <div><dt>Pacote</dt><dd data-field="package"><%= status.verified ? 'Baixado e verificado (SHA-256)' : (status.latest ? 'Aguardando download' : '—') %></dd></div>
+    <div><dt>Última verificação</dt><dd class="mono" data-field="checkedAt"><%= status.checkedAt ? helpers.formatDate(status.checkedAt, timezone) : 'Nunca' %></dd></div>
+    <div><dt>Download automático</dt><dd><%= status.autoDownload ? 'Ativado' : 'Desativado' %> (Configurações → Sistema)</dd></div>
+  </dl>
+  <p class="alert alert--error" data-field="error" <%= status.lastError ? '' : 'hidden' %>><%= status.lastError || '' %></p>
+  <% if (status.docker) { %>
+    <p class="alert">Este servidor roda em Docker. Para atualizar: <code class="mono">NOXIS_REF=<%= status.latest ? status.latest.tag : 'v1.x.x' %> docker compose up -d --build</code> dentro da pasta de deploy.</p>
+  <% } %>
+  <div class="form-actions form-actions--inline">
+    <button class="btn" type="button" id="checkUpdate">Verificar agora</button>
+    <button class="btn btn--primary" type="button" id="applyUpdate" <%= status.canApply ? '' : 'disabled' %>><%= status.latest ? 'Atualizar para ' + status.latest.version : 'Atualizar' %></button>
+  </div>
+  <p class="field__hint">A atualização faz backup do banco e do código antes de instalar. Se a instalação falhar, a versão anterior é restaurada. O serviço reinicia ao final.</p>
+</section>
+<% if (status.latest) { %>
+<section class="card">
+  <header class="card__head"><h2>Notas da versão <%= status.latest.version %></h2><a class="link" href="<%= status.latest.url %>" target="_blank" rel="noopener noreferrer">Ver no GitHub</a></header>
+  <article class="md"><%- status.latest.notesHtml %></article>
+</section>
+<% } %>
+<% locals.pageScript = 'updates' %>
+<%- include('../partials/shell-end') %>

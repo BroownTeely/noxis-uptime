@@ -1,0 +1,41 @@
+<%- include('../partials/shell-start') %>
+<div class="grid grid--2">
+<section class="card">
+  <header class="card__head"><h2>Varredura de portas TCP</h2></header>
+  <form id="discoveryForm" class="form">
+    <label class="field"><span class="field__label">Host ou IP da rede local</span>
+      <input name="host" required maxlength="253" placeholder="192.168.1.10" autocomplete="off"></label>
+    <fieldset class="field">
+      <legend class="field__label">Portas</legend>
+      <label class="check"><input type="radio" name="preset" value="common" checked><span>Portas comuns de homelab (<%= commonPorts.length %> portas)</span></label>
+      <label class="check"><input type="radio" name="preset" value="custom"><span>Lista ou faixas personalizadas</span></label>
+    </fieldset>
+    <label class="field" id="customPortsField" hidden><span class="field__label">Portas (ex.: 22,80,8000-8010)</span>
+      <input name="ports" maxlength="500" placeholder="22,80,443,8000-8010" disabled></label>
+    <label class="check"><input type="checkbox" name="authorized" required><span>Confirmo que sou responsável por este host e estou autorizado a verificá-lo.</span></label>
+    <p class="field__hint">Limites: apenas redes privadas, até <%= maxPorts %> portas por varredura, uma varredura por vez, 10 varreduras a cada 10 minutos. Nenhum monitor é criado sem a sua escolha.</p>
+    <div class="form-actions"><button class="btn btn--primary" type="submit" id="scanBtn">Verificar portas</button></div>
+    <div class="alert alert--error" id="scanError" hidden role="alert"></div>
+  </form>
+</section>
+
+<section class="card">
+  <header class="card__head">
+    <h2>Resultado</h2>
+    <span class="muted" id="scanSummary">Nenhuma varredura executada</span>
+  </header>
+  <label class="check"><input type="checkbox" id="onlyOpen" checked><span>Mostrar somente portas abertas</span></label>
+  <div class="table-wrap table-wrap--short">
+    <table class="table table--compact" id="scanTable">
+      <thead><tr><th></th><th>Porta</th><th>Estado</th><th>Serviço identificado</th><th class="num">Latência</th></tr></thead>
+      <tbody><tr><td colspan="5" class="empty">Execute uma varredura para ver os resultados</td></tr></tbody>
+    </table>
+  </div>
+  <div class="form-actions form-actions--inline">
+    <button class="btn btn--primary" type="button" id="createSelected" disabled>Criar monitores selecionados</button>
+  </div>
+  <p class="field__hint">Os monitores criados são do tipo porta TCP, com intervalo de 60 s, timeout de 3 s e 2 tentativas. A tag "descoberta" identifica a origem.</p>
+</section>
+</div>
+<% locals.pageScript = 'discovery' %>
+<%- include('../partials/shell-end') %>

@@ -1,0 +1,12 @@
+<%- include('head', { title: title, bodyClass: 'app-body' }) %>
+<div class="app" id="app">
+  <%- include('sidebar') %>
+  <div class="main">
+    <% if (typeof updateInfo !== 'undefined' && updateInfo && updateInfo.available && user && ['owner','admin'].includes(user.role)) { %>
+    <div class="update-banner" id="updateBanner" role="status">
+      <span>Nova versão <strong><%= updateInfo.latest.version %></strong> disponível (instalada: <%= updateInfo.current %>).</span>
+      <a class="btn btn--sm" href="/atualizacao">Ver atualização</a>
+    </div>
+    <% } %>
+    <%- include('topbar', { title: title, subtitle: typeof subtitle !== 'undefined' ? subtitle : '', headerActions: typeof headerActions !== 'undefined' ? headerActions : '' }) %>
+    <main class="content" id="content">

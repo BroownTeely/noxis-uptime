@@ -1,0 +1,24 @@
+<% locals.headerActions = '<button class="btn btn--primary" type="button" data-open-fragment="/fragments/maintenance-form" data-fragment="maintenance-form" data-title="Agendar manutenção">Agendar manutenção</button>'; %>
+<%- include('../partials/shell-start') %>
+<section class="card card--flush">
+  <div class="table-wrap">
+    <table class="table" id="maintenanceTable">
+      <thead><tr><th>Título</th><th>Status</th><th>Início</th><th>Término</th><th>Alvos</th><th class="actions-col"></th></tr></thead>
+      <tbody>
+        <% windows.forEach(w => { %>
+        <tr data-maintenance-id="<%= w.id %>">
+          <td><strong><%= w.title %></strong><div class="muted"><%= w.description || '' %></div></td>
+          <td><span class="badge badge--<%= w.status === 'active' ? 'maintenance' : (w.status === 'scheduled' ? 'pending' : 'paused') %>"><%= w.status === 'active' ? 'Em andamento' : (w.status === 'scheduled' ? 'Agendada' : 'Finalizada') %></span></td>
+          <td class="mono"><%= helpers.formatDate(w.startsAt, timezone, false) %></td>
+          <td class="mono"><%= helpers.formatDate(w.endsAt, timezone, false) %></td>
+          <td class="muted"><%= w.monitorIds.length %> monitor(es) · <%= w.groupIds.length %> grupo(s)</td>
+          <td class="actions"><button class="icon-btn icon-btn--danger" data-action="delete-maintenance" aria-label="Excluir"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></td>
+        </tr>
+        <% }) %>
+        <% if (!windows.length) { %><tr><td colspan="6" class="empty">Nenhuma manutenção programada</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<% locals.pageScript = 'maintenance' %>
+<%- include('../partials/shell-end') %>

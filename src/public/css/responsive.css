@@ -1,0 +1,103 @@
+/* Telas médias (notebooks e tablets em paisagem) */
+@media (max-width: 1200px) {
+  .grid--charts { grid-template-columns: 1fr; }
+  .grid--charts > :first-child { grid-column: auto; }
+  .grid--3 { grid-template-columns: 1fr 1fr; }
+  .form-layout { grid-template-columns: 1fr; }
+  .form-side { position: static; }
+  .grid--2-1 { grid-template-columns: 1fr; }
+}
+
+/* Tablets */
+@media (max-width: 980px) {
+  :root { --sidebar-w: 0px; }
+  .app { display: block; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; height: 100dvh; width: 268px; flex-basis: auto;
+    transform: translateX(-100%); transition: transform 0.25s var(--ease), width 0.25s var(--ease);
+    box-shadow: 0 0 40px rgb(0 0 0 / 0.5);
+  }
+  .app.is-mobile-open .sidebar { transform: translateX(0); }
+  .app.is-collapsed .sidebar { width: 268px; }
+  .app.is-collapsed .nav-item__text, .app.is-collapsed .nav-group__label, .app.is-collapsed .brand__name,
+  .app.is-collapsed .infra-card, .app.is-collapsed .profile__meta, .app.is-collapsed .profile__chev { opacity: 1; width: auto; }
+  .app.is-collapsed .nav-group__label { height: auto; padding: 6px 10px; }
+  .app.is-collapsed .nav-item { justify-content: flex-start; padding: 0 10px; }
+  .app.is-collapsed .nav-item__badge, .app.is-collapsed .nav-item__dot { position: static; margin-left: auto; }
+  .app.is-collapsed .brand__name { display: inline; }
+  .app.is-collapsed .brand { justify-content: flex-start; }
+  .app.is-collapsed .sidebar__toggle { display: inline-grid; }
+  .app.is-collapsed .profile__btn { width: 100%; padding: 8px; justify-content: flex-start; gap: 10px; }
+  .app.is-collapsed .sidebar__brand { justify-content: space-between; padding: 0 14px 0 18px; }
+  .app.is-collapsed .sidebar__toggle svg { transform: none; }
+  .app.is-collapsed .infra-card__stats { display: grid; }
+  .app.is-collapsed .sidebar__status span:first-child { opacity: 1; width: auto; }
+  .app.is-collapsed .sidebar__status .sidebar__version { display: inline; }
+  .nav-item[data-tooltip]::after { display: none; }
+  .sidebar__toggle { display: none; }
+  .main { width: 100%; }
+  .scrim { position: fixed; inset: 0; background: var(--overlay); z-index: 25; }
+  .grid--2 { grid-template-columns: 1fr; }
+  .settings { grid-template-columns: 1fr; }
+  .settings__tabs { flex-direction: row; overflow-x: auto; }
+  .settings__tabs button { white-space: nowrap; }
+  .channel-grid { grid-template-columns: 1fr; }
+}
+
+/* Celulares */
+@media (max-width: 640px) {
+  .topbar { padding: 0 14px; gap: 10px; height: 58px; }
+  .topbar__title h1 { font-size: 17px; }
+  .topbar__actions > .btn:not(.btn--primary) { display: none; }
+  .topbar__actions .btn--primary { height: 32px; padding: 0 10px; font-size: 12.5px; }
+  .content { padding: 14px; gap: 14px; }
+  .kpis { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { padding: 12px 14px; }
+  .kpi__value { font-size: 20px; }
+  .grid--3 { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .field--span-2 { grid-column: auto; }
+  .info-list > div { grid-template-columns: 1fr; gap: 2px; }
+  .toolbar { gap: 8px; }
+  .toolbar select, .toolbar input[type="search"], .search { min-width: 0; width: 100%; max-width: none; flex: 1 1 100%; }
+  .card { padding: 14px; }
+  .card--flush .card__head { padding: 14px 14px 0; }
+  .detail-head__actions { width: 100%; }
+  .detail-head__actions .btn { flex: 1; }
+  .truncate { max-width: 180px; }
+  dialog.modal { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  dialog.modal .modal__body { padding: 18px; }
+  .embed__fields { grid-template-columns: 1fr; }
+  .toast-region { left: 12px; right: 12px; width: auto; bottom: 12px; }
+  .auth__card { padding: 22px; }
+  .table td, .table th { padding: 9px 10px; }
+  .heartbeat { grid-template-columns: repeat(45, minmax(0, 1fr)); height: 36px; }
+}
+
+/* Tabelas de monitores: em telas pequenas, mantém rolagem horizontal organizada */
+@media (max-width: 1100px) {
+  .table--monitors th:nth-child(4), .table--monitors td:nth-child(4),
+  .table--monitors th:nth-child(5), .table--monitors td:nth-child(5) { display: none; }
+}
+
+/* Tabela de monitores em cartões no celular (ações sempre visíveis) */
+@media (max-width: 720px) {
+  .table--monitors thead { display: none; }
+  .table--monitors, .table--monitors tbody, .table--monitors tr, .table--monitors td { display: block; }
+  .table--monitors tr {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table--monitors tr:last-child { border-bottom: 0; }
+  .table--monitors td { padding: 0; border: 0; text-align: left; min-width: 0; }
+  .table--monitors td[data-label]::before {
+    content: attr(data-label); display: block; font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--muted); margin-bottom: 2px;
+  }
+  .table--monitors td:first-child { grid-column: 1; }
+  .table--monitors td.cell-name { grid-column: 1 / -1; }
+  .table--monitors td.actions { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; margin-top: 4px; }
+  .table--monitors td.actions::before { display: block; }
+  .table--monitors .hide-sm { display: none; }
+  .table--monitors td.truncate-sm { max-width: none; }
+}

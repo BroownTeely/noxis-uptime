@@ -1,0 +1,32 @@
+<%- include('../partials/shell-start') %>
+<section class="toolbar">
+  <div class="segmented" role="tablist" id="periodTabs">
+    <button type="button" role="tab" data-period="24h">24 h</button>
+    <button type="button" role="tab" data-period="7d" aria-selected="true">7 dias</button>
+    <button type="button" role="tab" data-period="30d">30 dias</button>
+    <button type="button" role="tab" data-period="90d">90 dias</button>
+  </div>
+  <select id="reportGroup" aria-label="Grupo">
+    <option value="">Todos os grupos</option>
+    <% groups.forEach(g => { %><option value="<%= g.id %>"><%= g.name %></option><% }) %>
+  </select>
+  <a class="btn" id="exportCsv" href="/api/reports/export.csv?period=7d">Exportar CSV</a>
+</section>
+
+<section class="kpis kpis--compact">
+  <article class="kpi kpi--accent"><span class="kpi__label">Disponibilidade geral</span><strong class="kpi__value" id="rOverall">—</strong></article>
+  <article class="kpi"><span class="kpi__label">Monitores avaliados</span><strong class="kpi__value" id="rCount">—</strong></article>
+  <article class="kpi"><span class="kpi__label">Sem dados no período</span><strong class="kpi__value" id="rNoData">—</strong></article>
+</section>
+
+<section class="card card--flush">
+  <div class="table-wrap">
+    <table class="table" id="reportTable">
+      <thead><tr><th>Monitor</th><th>Grupo</th><th class="num">Verificações</th><th class="num">Disponibilidade</th><th class="num">Lat. média</th><th class="num">Lat. máx.</th><th class="num">Indisponível</th><th class="num">Incidentes</th><th class="num">MTTR</th></tr></thead>
+      <tbody><tr><td colspan="9" class="empty">Carregando</td></tr></tbody>
+    </table>
+  </div>
+</section>
+<p class="muted field__hint" id="methodology"></p>
+<% locals.pageScript = 'reports' %>
+<%- include('../partials/shell-end') %>

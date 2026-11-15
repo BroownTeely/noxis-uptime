@@ -1,0 +1,75 @@
+<% const p = page || {}; %>
+<form class="form-page" id="statusPageForm" data-page-id="<%= page ? page.id : '' %>" novalidate>
+  <div class="form-layout">
+    <div class="form-main">
+      <section class="card">
+        <header class="card__head"><h2>Identificação</h2>
+          <% if (page) { %><a class="link" href="/status/<%= page.slug %>" target="_blank" rel="noopener">Abrir página pública</a><% } %></header>
+        <div class="form-grid">
+          <label class="field"><span class="field__label">Nome interno</span><input name="name" required maxlength="80" value="<%= p.name || '' %>"></label>
+          <label class="field"><span class="field__label">Slug (endereço /status/…)</span><input name="slug" required maxlength="60" pattern="[a-z0-9][a-z0-9-]{1,59}" value="<%= p.slug || '' %>"></label>
+          <label class="field field--span-2"><span class="field__label">Título exibido</span><input name="title" maxlength="120" value="<%= p.title || '' %>"></label>
+          <label class="field field--span-2"><span class="field__label">Descrição curta</span><textarea name="description" rows="2" maxlength="300"><%= p.description || '' %></textarea></label>
+          <label class="field"><span class="field__label">Domínio personalizado (opcional)</span><input name="customDomain" maxlength="253" placeholder="status.exemplo.com" value="<%= p.customDomain || '' %>"></label>
+          <label class="check"><input type="checkbox" name="isPublic" <%= !page || p.isPublic ? 'checked' : '' %>><span>Página pública (desmarque para exigir login)</span></label>
+          <% if (page && privateToken) { %>
+          <div class="field--span-2 token-box">
+            <span class="field__label">Link privado (não exige conta)</span>
+            <code class="copy-box mono">/status/<%= page.slug %>?token=<%= privateToken %></code>
+            <button class="btn btn--sm" type="button" id="regenToken" data-id="<%= page.id %>">Gerar novo token (invalida o link atual)</button>
+          </div>
+          <% } %>
+        </div>
+      </section>
+
+      <section class="card">
+        <header class="card__head"><h2>Serviços exibidos</h2><span class="muted">Ordem e grupo de cada serviço</span></header>
+        <div class="sp-rows" id="spRows">
+          <% rows.forEach(r => { %>
+          <div class="sp-row" data-monitor-id="<%= r.id %>">
+            <label class="check sp-row__check"><input type="checkbox" name="selected" <%= r.selected ? 'checked' : '' %>><span><%= r.name %></span></label>
+            <input class="sp-row__group" name="groupLabel" maxlength="60" value="<%= r.groupLabel %>" aria-label="Grupo de <%= r.name %>">
+            <button class="icon-btn" type="button" data-move="up" aria-label="Mover para cima">▲</button>
+            <button class="icon-btn" type="button" data-move="down" aria-label="Mover para baixo">▼</button>
+          </div>
+          <% }) %>
+          <% if (!rows.length) { %><p class="empty">Nenhum monitor cadastrado</p><% } %>
+        </div>
+      </section>
+    </div>
+
+    <aside class="form-side">
+      <section class="card">
+        <header class="card__head"><h2>Aparência</h2></header>
+        <div class="form-grid form-grid--single">
+          <label class="field"><span class="field__label">Tema</span>
+            <select name="theme">
+              <option value="dark" <%= (p.theme || 'dark') === 'dark' ? 'selected' : '' %>>Escuro</option>
+              <option value="light" <%= p.theme === 'light' ? 'selected' : '' %>>Claro</option>
+              <option value="auto" <%= p.theme === 'auto' ? 'selected' : '' %>>Automático</option>
+            </select></label>
+          <label class="field"><span class="field__label">Cor de destaque</span>
+            <input name="accentColor" type="color" value="<%= p.accentColor || '#22d3ee' %>"></label>
+          <label class="field"><span class="field__label">Logo (URL https)</span><input name="logoUrl" maxlength="500" value="<%= p.logoUrl || '' %>"></label>
+          <label class="field"><span class="field__label">Favicon (URL https)</span><input name="faviconUrl" maxlength="500" value="<%= p.faviconUrl || '' %>"></label>
+        </div>
+      </section>
+      <section class="card">
+        <header class="card__head"><h2>Exibição</h2></header>
+        <div class="form-grid form-grid--single">
+          <% [['showUptime','Uptime (24h, 7d, 30d)', p.showUptime !== false], ['showLatency','Latência', p.showLatency !== false],
+              ['showHistory','Histórico de 90 dias', p.showHistory !== false], ['showIncidents','Incidentes', p.showIncidents !== false],
+              ['showMaintenance','Manutenções', p.showMaintenance !== false], ['showDependencies','Dependências entre serviços', !!p.showDependencies],
+              ['showFooter','Rodapé', p.showFooter !== false]].forEach(f => { %>
+          <label class="check"><input type="checkbox" name="<%= f[0] %>" <%= f[2] ? 'checked' : '' %>><span><%= f[1] %></span></label>
+          <% }) %>
+        </div>
+      </section>
+      <div class="form-actions">
+        <a class="btn btn--ghost" href="/status-pages" data-cancel-link>Cancelar</a>
+        <button class="btn btn--primary" type="submit" id="spSave"><%= page ? 'Salvar' : 'Criar' %></button>
+      </div>
+      <div class="alert alert--error" id="spErrors" hidden role="alert"></div>
+    </aside>
+  </div>
+</form>

@@ -1,0 +1,34 @@
+# Noxis Uptime com Docker.
+# 1) cp noxis.env.example noxis.env   e defina APP_SECRET (openssl rand -hex 32)
+# 2) docker compose up -d --build
+# Versão: NOXIS_REF=v1.0.0 docker compose up -d --build   (padrão: main)
+# Porta externa: PORT_PUBLISHED=3210 docker compose up -d
+services:
+  noxis-uptime:
+    build:
+      context: https://github.com/BroownTeely/noxis-uptime.git#${NOXIS_REF:-main}
+    image: noxis-uptime:${NOXIS_REF:-main}
+    container_name: noxis-uptime
+    restart: unless-stopped
+    env_file:
+      - ./noxis.env
+    environment:
+      PORT: "8417"
+      HOST: "0.0.0.0"
+    ports:
+      - "${PORT_PUBLISHED:-8417}:8417"
+    volumes:
+      - noxis-data:/app/storage
+    cap_add:
+      - NET_RAW
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8417/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    stop_grace_period: 20s
+volumes:
+  noxis-data:

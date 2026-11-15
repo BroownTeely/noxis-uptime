@@ -1,0 +1,23 @@
+<%- include('../partials/shell-start') %>
+<div class="grid grid--2">
+<section class="card">
+  <header class="card__head"><h2>Conta</h2></header>
+  <dl class="info-list">
+    <div><dt>Usuário</dt><dd class="mono"><%= user.username %></dd></div>
+    <div><dt>Nome</dt><dd><%= user.displayName %></dd></div>
+    <div><dt>Papel</dt><dd><%= roleLabel(user.role) %></dd></div>
+  </dl>
+</section>
+<section class="card">
+  <header class="card__head"><h2>Alterar senha</h2></header>
+  <form id="passwordForm" class="form">
+    <label class="field"><span class="field__label">Senha atual</span><input name="current" type="password" required autocomplete="current-password"></label>
+    <label class="field"><span class="field__label">Nova senha</span><input name="next" type="password" required minlength="10" autocomplete="new-password"></label>
+    <label class="field"><span class="field__label">Confirmar nova senha</span><input name="confirm" type="password" required minlength="10" autocomplete="new-password"></label>
+    <div class="alert alert--error" id="pwErrors" hidden role="alert"></div>
+    <button class="btn btn--primary" type="submit">Alterar senha</button>
+  </form>
+</section>
+</div>
+<% locals.pageScript = 'profile' %>
+<%- include('../partials/shell-end') %>

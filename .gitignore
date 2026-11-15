@@ -1,0 +1,22 @@
+# dependências e builds
+node_modules/
+dist/
+.github/release-assets/dist/
+
+# segredos e dados locais (nunca versionar)
+.env
+.env.*
+!.env.example
+noxis.env
+storage/database/*.db*
+storage/backups/
+storage/updates/
+storage/npm-cache/
+storage/home/
+storage/logs/*
+!storage/**/.gitkeep
+
+# logs e sistema
+*.log
+.DS_Store
+Thumbs.db

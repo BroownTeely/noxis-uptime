@@ -1,0 +1,26 @@
+<form class="form form-page" id="maintenanceForm" novalidate>
+  <label class="field"><span class="field__label">Título</span><input name="title" required maxlength="120"></label>
+  <label class="field"><span class="field__label">Descrição</span><textarea name="description" rows="2" maxlength="1000"></textarea></label>
+  <div class="form-grid">
+    <label class="field"><span class="field__label">Início</span><input name="startsAt" type="datetime-local" required></label>
+    <label class="field"><span class="field__label">Término</span><input name="endsAt" type="datetime-local" required></label>
+  </div>
+  <fieldset class="field">
+    <legend class="field__label">Monitores</legend>
+    <div class="check-grid">
+      <% monitors.forEach(m => { %><label class="check"><input type="checkbox" name="monitorIds" value="<%= m.id %>"><span><%= m.name %></span></label><% }) %>
+    </div>
+  </fieldset>
+  <fieldset class="field">
+    <legend class="field__label">Grupos</legend>
+    <div class="check-grid">
+      <% groups.forEach(g => { %><label class="check"><input type="checkbox" name="groupIds" value="<%= g.id %>"><span><%= g.name %></span></label><% }) %>
+    </div>
+  </fieldset>
+  <p class="field__hint">Durante a manutenção, os monitores ficam em MANUTENÇÃO e não geram incidentes nem notificações de falha.</p>
+  <div class="form-actions">
+    <a class="btn btn--ghost" href="/maintenance" data-cancel-link>Cancelar</a>
+    <button class="btn btn--primary" type="submit">Agendar</button>
+  </div>
+  <div class="alert alert--error" id="maintenanceFormError" hidden role="alert"></div>
+</form>

@@ -1,0 +1,128 @@
+<%- include('../partials/shell-start') %>
+<% const s = summary; const pct = v => v === null || v === undefined ? '—' : v.toFixed(2) + '%'; %>
+<section class="kpis" aria-label="Indicadores">
+  <article class="kpi"><span class="kpi__label">Total de monitores</span><strong class="kpi__value" data-live="total"><%= s.total %></strong></article>
+  <article class="kpi kpi--up"><span class="kpi__label">Online</span><strong class="kpi__value" data-live="online"><%= s.online %></strong></article>
+  <article class="kpi kpi--down"><span class="kpi__label">Offline</span><strong class="kpi__value" data-live="offline"><%= s.offline %></strong></article>
+  <article class="kpi kpi--degraded"><span class="kpi__label">Com problemas</span><strong class="kpi__value" data-live="problems"><%= s.problems %></strong></article>
+  <article class="kpi kpi--paused"><span class="kpi__label">Pausados</span><strong class="kpi__value" data-live="paused"><%= s.paused %></strong></article>
+  <article class="kpi kpi--accent"><span class="kpi__label">Disponibilidade 24h</span><strong class="kpi__value" data-live="availability24h"><%= pct(s.availability24h) %></strong></article>
+  <article class="kpi"><span class="kpi__label">Incidentes ativos</span><strong class="kpi__value" data-live="openIncidents"><%= s.openIncidents %></strong></article>
+  <article class="kpi"><span class="kpi__label">Latência média</span><strong class="kpi__value" data-live="avgLatency"><%= s.avgLatencyMs !== null ? s.avgLatencyMs + ' ms' : '—' %></strong></article>
+  <article class="kpi"><span class="kpi__label">Uptime médio 30d</span><strong class="kpi__value" data-live="avgUptime30d"><%= pct(s.avgUptime30d) %></strong></article>
+</section>
+
+<section class="grid grid--charts">
+  <article class="card card--chart">
+    <header class="card__head">
+      <h2>Disponibilidade</h2>
+      <div class="segmented" role="tablist" aria-label="Período">
+        <button type="button" role="tab" data-range="24h" aria-selected="true">24 h</button>
+        <button type="button" role="tab" data-range="7d" aria-selected="false">7 dias</button>
+        <button type="button" role="tab" data-range="30d" aria-selected="false">30 dias</button>
+        <button type="button" role="tab" data-range="90d" aria-selected="false">90 dias</button>
+      </div>
+    </header>
+    <div class="chart" id="chartAvailability" data-chart="availability"></div>
+  </article>
+  <article class="card card--chart">
+    <header class="card__head"><h2>Latência média</h2><span class="muted" data-chart-range-label>24 h</span></header>
+    <div class="chart" id="chartLatency" data-chart="latency"></div>
+  </article>
+  <article class="card card--chart">
+    <header class="card__head"><h2>Incidentes por dia</h2><span class="muted">30 dias</span></header>
+    <div class="chart" id="chartIncidents" data-chart="incidents"></div>
+  </article>
+</section>
+
+<section class="grid grid--3">
+  <article class="card">
+    <header class="card__head"><h2>Maior latência</h2></header>
+    <ul class="rank-list">
+      <% if (!rankings.topLatency.length) { %><li class="empty">Sem dados</li><% } %>
+      <% rankings.topLatency.forEach(m => { %>
+        <li><a href="/monitors/<%= m.id %>"><%= m.name %></a><span class="mono"><%= m.latency %> ms</span></li>
+      <% }) %>
+    </ul>
+  </article>
+  <article class="card">
+    <header class="card__head"><h2>Menor disponibilidade (7d)</h2></header>
+    <ul class="rank-list">
+      <% if (!rankings.lowUptime.length) { %><li class="empty">Sem dados</li><% } %>
+      <% rankings.lowUptime.forEach(m => { %>
+        <li><a href="/monitors/<%= m.id %>"><%= m.name %></a><span class="mono"><%= pct(m.uptime7d) %></span></li>
+      <% }) %>
+    </ul>
+  </article>
+  <article class="card">
+    <header class="card__head"><h2>Problemas recentes (7d)</h2></header>
+    <ul class="rank-list">
+      <% if (!rankings.recentProblems.length) { %><li class="empty">Nenhum problema</li><% } %>
+      <% rankings.recentProblems.forEach(m => { %>
+        <li><a href="/monitors/<%= m.id %>"><%= m.name %></a><span class="badge badge--down"><%= m.n %></span></li>
+      <% }) %>
+    </ul>
+  </article>
+</section>
+
+<section class="grid grid--2-1">
+  <article class="card">
+    <header class="card__head"><h2>Grupos</h2><a href="/groups" class="link">Gerenciar</a></header>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Grupo</th><th class="num">Monitores</th><th class="num">Online</th><th class="num">Offline</th><th class="num">Disp. 24h</th></tr></thead>
+        <tbody id="groupsBody">
+          <% groups.forEach(g => { %>
+          <tr>
+            <td><%= g.name %></td><td class="num"><%= g.total %></td>
+            <td class="num c-up"><%= g.online %></td><td class="num c-down"><%= g.offline %></td>
+            <td class="num mono"><%= pct(g.availability24h) %></td>
+          </tr>
+          <% }) %>
+          <% if (!groups.length) { %><tr><td colspan="5" class="empty">Nenhum monitor cadastrado</td></tr><% } %>
+        </tbody>
+      </table>
+    </div>
+  </article>
+  <article class="card">
+    <header class="card__head"><h2>Últimos incidentes</h2><a href="/incidents" class="link">Ver todos</a></header>
+    <ul class="timeline" id="latestIncidents">
+      <% incidents.forEach(i => { %>
+        <li class="timeline__item">
+          <span class="dot dot--<%= i.status === 'resolved' ? 'up' : 'down' %>"></span>
+          <div>
+            <a href="/incidents/<%= i.id %>"><%= i.title %></a>
+            <small class="muted"><%= helpers.formatDate(i.startedAt, timezone) %> · <%= i.status === 'resolved' ? 'Resolvido' : 'Aberto' %></small>
+          </div>
+        </li>
+      <% }) %>
+      <% if (!incidents.length) { %><li class="empty">Nenhum incidente registrado</li><% } %>
+    </ul>
+  </article>
+</section>
+
+<section class="card">
+  <header class="card__head"><h2>Histórico de atividade</h2></header>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Quando</th><th>Monitor</th><th>Transição</th><th>Detalhe</th></tr></thead>
+      <tbody id="activityBody">
+        <% activity.forEach(e => { const to = helpers.statusMeta(e.newStatus); %>
+          <tr>
+            <td class="mono"><%= helpers.formatDate(e.createdAt, timezone) %></td>
+            <td><a href="/monitors/<%= e.monitorId %>"><%= e.monitorName || '—' %></a></td>
+            <td><span class="badge badge--<%= to.cls %>"><%= to.label %></span></td>
+            <td class="muted truncate"><%= e.message || '' %></td>
+          </tr>
+        <% }) %>
+        <% if (!activity.length) { %><tr><td colspan="4" class="empty">Sem atividade</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="card about-card">
+  <header class="card__head"><h2>Sobre o Noxis Uptime</h2><a class="link" href="/sobre">Ler o README</a></header>
+  <p class="muted">Versão <span class="mono"><%= version %></span>. Sistema de monitoramento self-hosted para homelab. Atualizações, suporte e sugestões em <a class="link" href="/sobre#contato">Sobre</a>.</p>
+</section>
+<% locals.pageScript = 'dashboard' %>
+<%- include('../partials/shell-end') %>
