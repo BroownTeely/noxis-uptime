@@ -1,6 +1,6 @@
 {
   "name": "noxis-uptime",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Plataforma self-hosted de monitoramento de infraestrutura para homelab e self-hosting",
   "main": "app.js",
   "license": "MIT",

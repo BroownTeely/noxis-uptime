@@ -20,8 +20,9 @@ die()  { printf '\033[1;31m[erro]\033[0m %s\n' "$*" >&2; exit 1; }
 
 [[ $EUID -eq 0 ]] || die "Execute como root: sudo bash install.sh"
 command -v systemctl >/dev/null || die "systemd não encontrado. Use Docker ou instale manualmente."
-. /etc/os-release 2>/dev/null || true
-log "Sistema: ${PRETTY_NAME:-desconhecido}"
+# Lê o sistema operacional em um subshell: /etc/os-release define VERSION, que sobrescreveria a versão pedida.
+OS_NAME="$(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-desconhecido}" || echo desconhecido)"
+log "Sistema: ${OS_NAME}"
 
 # 1) Dependências do sistema
 apt-get update -qq
