@@ -107,15 +107,6 @@ curl -fsSL https://github.com/BroownTeely/noxis-uptime/releases/latest/download/
 
 O instalador escolhe uma porta aleatória de 4 dígitos (1000 a 9999), livre no servidor, e mostra o endereço no final. Acesse `http://IP-DO-SERVIDOR:PORTA` e crie a conta owner em `/setup`. Para usar uma porta específica: `sudo PORT=8417 bash install.sh`.
 
-### Docker
-
-Use o pacote de deploy (`noxis-deploy`), que fica separado deste repositório:
-
-```bash
-cp noxis.env.example noxis.env          # defina APP_SECRET (openssl rand -hex 32)
-NOXIS_REF=v1.0.0 docker compose up -d --build
-```
-
 Porta externa diferente: `PORT_PUBLISHED=3210 docker compose up -d --build`.
 
 ### Manual (desenvolvimento ou outros sistemas)
