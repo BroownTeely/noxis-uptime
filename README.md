@@ -4,7 +4,7 @@ Sistema de monitoramento de infraestrutura **self-hosted**, feito para homelab e
 
 Repositório: https://github.com/BroownTeely/noxis-uptime
 
-> Este projeto foi desenvolvido com o auxílio de **inteligência artificial** (Claude, da Anthropic), com revisão, testes e decisões de arquitetura feitos pelo mantenedor.
+> Este projeto foi desenvolvido com o auxílio de **inteligência artificial** (Claude, da Anthropic), com revisão, testes e decisões de arquitetura feitos pelo mantendor.
 
 ---
 
